@@ -1,3 +1,7 @@
 {
-	"metOfficeApiKey": "xxxxxxxxxxxxxxx"
+	"port": 36000,
+    "hostname": "localhost",
+    
+    "radioDiscoveryPacketDelay": 500,
+    "radioNormalPacketDelay": 10
 }

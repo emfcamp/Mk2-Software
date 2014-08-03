@@ -2,21 +2,20 @@ import logging
 import json
 import sys
 import tornado
+import binascii
+import struct
 from tornado.tcpserver import TCPServer
 from tornado import gen
 
 class McpTcpServer(TCPServer):
     
-    def __init__(self, config):
+    def __init__(self, config, dataQueue):
         super(McpTcpServer, self).__init__()
         self.config = config
+        self.dataQueue = dataQueue
         self.connections = {}
         self.nextConnectionId = 0;
         self.logger = logging.getLogger('McpTcpServer')
-
-    def send_to_all(self, message):
-        for key in self.connections:
-            send(key, message)
 
     def send(self, connectionId, message):
         connection = self.connections[connectionId]
@@ -25,7 +24,17 @@ class McpTcpServer(TCPServer):
         else:
             self.logger.warn("Trying to send to connection that is already closed: %d", connectionId)
 
-    @gen.coroutine
+    def get_unused_channel(self):
+        for channel in range(6, 200, 2):
+            for connection in self.connections:
+                if connection['mainChannel'] == channel:
+                    break
+            else:
+                return channel
+    
+
+    # gen.coroutine was swallowing errors since it's returning a future. This bubbles errors up.
+    @gen.engine
     def handle_stream(self, stream, address):
         try:
             connectionId = self.nextConnectionId;
@@ -42,17 +51,39 @@ class McpTcpServer(TCPServer):
 
             # Check conditions
             numberOfRadios = gwInfo["numberOfRadios"]
+            identifier = gwInfo["identifier"]
             if numberOfRadios < 2:
-                logger.warn("Too few radios. Ignoring connection.")
+                logger.warn("Too few radios (%d). Closing connection.", numberOfRadios)
+                stream.close()
                 return
+            if len(identifier) != 3:
+                logger.warn("Invalid identifier: %s. Closing connection.", identifier)
+                stream.close()
+                return
+
+            # Find unused channel
+            logger.info("Find channel...")
+            mainChannel = self.get_unused_channel()
+            logger.info("Assigning channel 0x%s",  binascii.hexlify(struct.pack("B", mainChannel)))
 
             # Store connection away
             self.connections[connectionId] = {
                 "connectionId": connectionId,
                 "numberOfRadios": numberOfRadios,
+                "identifier": identifier,
                 "stream": stream,
-                "logger": logger
+                "logger": logger,
+                "mainChannel": mainChannel
             }
+
+            # Configure radios
+            self.send(connectionId, {
+                "type":"configure",
+                "configurations": [
+                    ["ATPK08", "ATCN00", "ATAC", "ATDN"],
+                    ["ATPK3A", "ATCN" + binascii.hexlify(struct.pack("B", mainChannel)), "ATAC", "ATDN"]
+                ]
+            })
 
             # Wait for incoming data
             while True:
@@ -62,13 +93,19 @@ class McpTcpServer(TCPServer):
 
         except tornado.iostream.StreamClosedError as e:
             self.connections[connectionId]['logger'].warn("Connection has been closed")
-            del self.connections[connectionId]
+            self.remove_connection(connectionId)
 
-        except Exception as e:
-            self.connections[connectionId]['logger'].error("Unexpected exception found for connection %s: '%s' %s", ip, sys.exc_info()[0], e);
+        except BaseException as e:
+            loggerForException = self.logger
+            if connectionId in self.connections:
+                loggerForException = self.connections[connectionId]['logger']
+            loggerForException.error("Unexpected exception found for connection %s: '%s' %s", ip, sys.exc_info()[0], e);
             stream.close()
-            del self.connections[connectionId]
+            self.remove_connection(connectionId)
             raise
          
 
-        
+    def remove_connection(self, connectionId):
+        if connectionId in self.connections:
+            self.dataQueue.delete_connection(connectionId)
+            del self.connections[connectionId]

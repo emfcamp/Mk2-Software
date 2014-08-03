@@ -15,7 +15,6 @@
 
 import sys
 import hashlib
-import M2Crypto
 import struct
 import time
 import serial 

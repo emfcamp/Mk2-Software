@@ -11,10 +11,15 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(leve
 config = json.load(open('config.json'))
 
 # Inject dependencies
-mcpTcpServer = lib.McpTcpServer(config);
+dataQueue = lib.DataQueue()
+messageReplenisher = lib.MessageReplenisher(config, dataQueue)
+mcpTcpServer = lib.McpTcpServer(config, dataQueue);
+mainChannelSender = lib.MainChannelSender(config, mcpTcpServer, dataQueue)
 discoveryChannelTimer = lib.DiscoveryChannelTimer(config, mcpTcpServer);
 main = lib.Main(config, mcpTcpServer)
 
 # Start
+messageReplenisher.start()
 discoveryChannelTimer.start()
+mainChannelSender.start()
 main.start()

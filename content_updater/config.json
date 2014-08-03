@@ -1,0 +1,7 @@
+{
+    "dbConnectionString": "dbname='tilda' user='tilda' host='localhost' password='password'",
+
+    "metOfficeApiKey": "46899d28-a6cc-4b99-9cd4-1dabd64d64b4",
+    "metLocationId": "350493"
+
+}
