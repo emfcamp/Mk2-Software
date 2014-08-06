@@ -5,6 +5,7 @@ import json
 import requests
 import struct
 import sys
+import binascii
 
 config = json.load(open('config.json'))
 
@@ -27,6 +28,8 @@ data = json.loads(resp.text);
 daysWithForecast = data['SiteRep']['DV']['Location']['Period'];
 
 forecasts = []
+
+print daysWithForecast
 
 for day in daysWithForecast:
     forecasts += day['Rep']
@@ -62,7 +65,8 @@ cursor = conn.cursor()
 
 # Update content
 logger.info("Upating content...")
-cursor.execute("UPDATE content SET content = %s WHERE name = 'WEATHER_FORECAST';", (packedForecasts, ));
+contentAsHexString = binascii.hexlify(packedForecasts)
+cursor.execute("UPDATE content SET content = decode(%(content)s, 'hex') WHERE name = 'WEATHER_FORECAST';", {'content': contentAsHexString});
 conn.commit()
 cursor.close()
 conn.close()

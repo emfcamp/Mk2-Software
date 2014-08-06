@@ -80,7 +80,7 @@ class McpTcpServer(TCPServer):
             self.send(connectionId, {
                 "type":"configure",
                 "configurations": [
-                    ["ATPK08", "ATCN00", "ATAC", "ATDN"],
+                    ["ATPK08", "ATCN02", "ATAC", "ATDN"],
                     ["ATPK3A", "ATCN" + binascii.hexlify(struct.pack("B", mainChannel)), "ATAC", "ATDN"]
                 ]
             })
