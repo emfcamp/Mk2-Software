@@ -112,7 +112,6 @@ class Gateway:
             self.logger.info("Receiver started")
             while True:
                 packet = self.usb_radios.readPacket(1, 58)
-                self.logger.info("Received %s", binascii.hexlify(packet));
                 message = {
                     "type": "received",
                     "radioId": 1,
