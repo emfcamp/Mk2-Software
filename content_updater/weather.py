@@ -6,6 +6,8 @@ import requests
 import struct
 import sys
 import binascii
+import msgpack
+import time
 
 config = json.load(open('config.json'))
 
@@ -29,8 +31,6 @@ daysWithForecast = data['SiteRep']['DV']['Location']['Period'];
 
 forecasts = []
 
-print daysWithForecast
-
 for day in daysWithForecast:
     forecasts += day['Rep']
 
@@ -45,16 +45,27 @@ times = [
     {'name': 'in48Hours', 'index': 16},
 ];
 
-packedForecasts = b"";
-for time in times:
-    forecast = forecasts[time['index']];
+jsonToBePacked = [];
+
+for timeElement in times:
+    forecast = forecasts[timeElement['index']];
+    timestamp = time.time() # ToDo: Use real time from the API
     weatherType = int(forecast['W'])
     temperature = int(forecast['T'])
     windSpeed = int(forecast['S'])
     feelsLikeTemperature = int(forecast['F'])
     screenRelativeHumidity = int(forecast['H'])
     precipitationProbability = int(forecast['Pp'])
-    packedForecasts += struct.pack('> B b b B B B', weatherType, temperature, feelsLikeTemperature, windSpeed, screenRelativeHumidity, precipitationProbability);
+    jsonToBePacked.append([
+        timestamp,
+        temperature,
+        feelsLikeTemperature,
+        windSpeed,
+        screenRelativeHumidity,
+        precipitationProbability
+    ])
+
+packedForecasts = msgpack.packb(jsonToBePacked)
 
 logger.info("Content length: %d", len(packedForecasts))
 
