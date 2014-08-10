@@ -18,7 +18,7 @@ class UsbRadios:
 
     def setup(self):
         # Find all radio mount points
-        bashFoo = "ls /dev/ttyACM* | xargs -IPATH sh -c \"udevadm info --name=PATH | grep -q 'ID_MODEL_ID=16a6' && echo PATH\"; true"
+        bashFoo = "ls /dev/ttyACM* | xargs -IPATH sh -c \"udevadm info --query=all --name=PATH | grep -q 'ID_MODEL_ID=16a6' && echo PATH\"; true"
         self.serial_devices = subprocess.check_output(bashFoo, shell=True).strip().split('\n')
 
         # Connect via serial
