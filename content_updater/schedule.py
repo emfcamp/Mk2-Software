@@ -7,7 +7,7 @@ import struct
 import sys
 import binascii
 import time
-import msgpack
+import tinypacks
 
 config = json.load(open('config.json'))
 
@@ -43,18 +43,26 @@ for stage in scheduleJson['stages']:
         if 'speaker' in event:
             speaker = event['speaker']
 
-        talks.append([
-            stageId,
-            typeId,
-            startTimestamp,
-            endTimestamp,
-            speaker,
-            event['title'],
+        talks.append({
+            "stageId": stageId,
+            "typeId": typeId,
+            "start": startTimestamp,
+            "end": endTimestamp,
+            "speaker": speaker,
+            "title": event['title'],
            # event['description'] Thiss is quite a lot of data. Leaving it out for now
-        ])
+        })
 
-packed = msgpack.packb(talks)
+packed = tinypacks.pack(len(talks));
+for talk in talks:
+    packed += tinypacks.pack(talk['stageId']);
+    packed += tinypacks.pack(talk['typeId']);
+    packed += tinypacks.pack(talk['start']);
+    packed += tinypacks.pack(talk['end']);
+    packed += tinypacks.pack(talk['speaker']);
+    packed += tinypacks.pack(talk['title']);
 
+print binascii.hexlify(packed)
 logger.info("Content length: %d", len(packed))
 
 # Connect do db

@@ -6,7 +6,7 @@ import requests
 import struct
 import sys
 import binascii
-import msgpack
+import tinypacks
 import time
 
 config = json.load(open('config.json'))
@@ -17,7 +17,7 @@ logger = logging.getLogger('weather');
 logger.info("Fetching current weather conditions...")
 
 # Get id from http://datapoint.metoffice.gov.uk/public/data/val/wxfcs/all/json/350493?res=3hourly&key=xxxxxxx
-url = 'http://datapoint.metoffice.gov.uk/public/data/val/wxfcs/all/json/{0}'.format(config['metLocationId']) 
+url = 'http://datapoint.metoffice.gov.uk/public/data/val/wxfcs/all/json/{0}'.format(config['metLocationId'])
 
 params = dict(
     res='3hourly',
@@ -46,26 +46,32 @@ times = [
 ];
 
 jsonToBePacked = [];
-
+packedForecasts = b"";
 for timeElement in times:
     forecast = forecasts[timeElement['index']];
-    timestamp = time.time() # ToDo: Use real time from the API
+    timestamp = int(round(time.time())) # ToDo: Use real time from the API
     weatherType = int(forecast['W'])
     temperature = int(forecast['T'])
     windSpeed = int(forecast['S'])
     feelsLikeTemperature = int(forecast['F'])
     screenRelativeHumidity = int(forecast['H'])
     precipitationProbability = int(forecast['Pp'])
-    jsonToBePacked.append([
-        timestamp,
-        temperature,
-        feelsLikeTemperature,
-        windSpeed,
-        screenRelativeHumidity,
-        precipitationProbability
-    ])
+    logger.info("timestamp: %d", timestamp);
+    logger.info("temperature: %d", temperature);
+    logger.info("weatherType: %d", weatherType);
+    packedForecasts += tinypacks.pack(timestamp);
+    packedForecasts += tinypacks.pack(weatherType);
+    packedForecasts += tinypacks.pack(temperature);
+    packedForecasts += tinypacks.pack(feelsLikeTemperature);
+    packedForecasts += tinypacks.pack(windSpeed);
+    packedForecasts += tinypacks.pack(screenRelativeHumidity);
+    packedForecasts += tinypacks.pack(precipitationProbability);
 
-packedForecasts = msgpack.packb(jsonToBePacked)
+#print jsonToBePacked
+##packedForecasts = tinypacks.pack(jsonToBePacked)
+
+#result = tinypacks.unpack(packedForecasts)
+print binascii.hexlify(packedForecasts)
 
 logger.info("Content length: %d", len(packedForecasts))
 
