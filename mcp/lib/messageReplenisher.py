@@ -24,8 +24,10 @@ class MessageReplenisher:
     #    self.conn.close()
 
     def queue_has_drained(self, connectionId):
-        self.cursor.execute("SELECT content FROM content WHERE name = 'WEATHER_FORECAST';");
+        self.cursor.execute("SELECT content FROM content WHERE name IN ('WEATHER_FORECAST', 'SCHEDULE_FRIDAY');");
         (payload, ) = self.cursor.fetchone()
         self.dataQueue.add_message(connectionId, 40962, payload)
+        (payload, ) = self.cursor.fetchone()
+        self.dataQueue.add_message(connectionId, 40963, payload)
         
 
