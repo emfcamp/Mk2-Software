@@ -1,0 +1,18 @@
+#!/usr/bin/env python
+import glob
+from setuptools import setup
+
+setup(name='emfmcp',
+      version='0.1',
+      description='emfcamp master control program for tilda badges',
+      long_description=open('README.md').read(),
+      author='Badge Monkey',
+      author_email='hello@emfcamp.org',
+      url='http://www.emfcamp.org',
+      packages=['emfmcp'],
+      scripts=glob.glob('bin/*.py'),
+      install_requires=[
+          "tornado >= 4.0.1",
+          "psycopg2 >= 2.4.6",
+      ],
+      )
