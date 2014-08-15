@@ -12,7 +12,7 @@ config = json.load(open('etc/config.json'))
 
 # Inject dependencies
 dataQueue = emfmcp.DataQueue()
-messageReplenisher = emfmcp.MessageReplenisher(config, dataQueue)
+
 mcpTcpServer = emfmcp.McpTcpServer(config, dataQueue)
 mainChannelSender = emfmcp.MainChannelSender(config, mcpTcpServer, dataQueue)
 discoveryChannelTimer = emfmcp.DiscoveryChannelTimer(config, mcpTcpServer)
@@ -22,4 +22,5 @@ main = emfmcp.Main(config, mcpTcpServer)
 ##messageReplenisher.start()
 discoveryChannelTimer.start()
 mainChannelSender.start()
+emfmcp.HTTPd.listen(config, dataQueue, 8888)
 main.start()

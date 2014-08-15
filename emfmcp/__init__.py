@@ -5,6 +5,7 @@ import mainChannelSender
 import dataQueue
 import messageReplenisher
 import packet
+import httpd
 
 Main = main.Main
 McpTcpServer = mcpTcpServer.McpTcpServer
@@ -13,3 +14,4 @@ MainChannelSender = mainChannelSender.MainChannelSender
 DataQueue = dataQueue.DataQueue
 MessageReplenisher = messageReplenisher.MessageReplenisher
 Packet = packet.Packet
+HTTPd = httpd

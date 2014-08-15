@@ -20,3 +20,15 @@ With VirtualBox and Vagrant installed, run:
 
 etc.
 
+## API
+
+Anything like sending regular weather reports or whatever should be
+written as a script, cronned, and deliver messages via the http api.
+
+We'll want helper-handlers, like posting to /send-weather or something.
+
+Send a message:
+
+    curl -XPOST -d "hello" "http://localhost:8888/send?rid=1&connection=2"
+
+

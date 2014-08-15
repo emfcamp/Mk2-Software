@@ -8,7 +8,8 @@ class Packet:
     def __init__(self, rid, payload):
         self.payload = payload
         self.rid = rid
-        self.digest = self.sig = None
+        self._digest = None
+        self._sig = None
 
     def packets(self):
         r = [self.header_packet()]
@@ -16,9 +17,11 @@ class Packet:
         return r
 
     def header_packet(self):
-        return struct.pack('> H i 12s 40s', self.rid, len(self.payload), self.digest()[:12], self.signature())
+        digest = self.digest()
+        sig = self.signature()
+        return struct.pack('> H i 12s 40s', self.rid, len(self.payload), digest[:12], sig)
 
-    # fragment payload into data packets
+    # fragment payload into data packets, and zero-pad
     def data_packets(self):
         ret = []
         c = 0
@@ -31,21 +34,21 @@ class Packet:
         return ret
 
     def digest(self):
-        if (self.digest):
-            return self.digest
+        if (self._digest):
+            return self._digest
         sha1 = hashlib.sha1()
         sha1.update(struct.pack('> H', self.rid))
         sha1.update(self.payload)
-        self.digest = sha1.digest()
-        return self.digest
+        self._digest = sha1.digest()
+        return self._digest
 
     def signature(self):
-        if self.sig:
-            return self.sig
-        digesthex = binascii.hexlify(self.digest)
+        if self._sig:
+            return self._sig
+        digesthex = binascii.hexlify(self.digest())
         p = subprocess.Popen(['./lib/signer', 'sign'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate(digesthex)
         outlines = out.split("\n")
         result = outlines[1]
-        self.sig = binascii.unhexlify(result)
-        return self.sig
+        self._sig = binascii.unhexlify(result)
+        return self._sig

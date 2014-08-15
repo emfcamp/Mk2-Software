@@ -7,14 +7,15 @@ import struct
 from tornado.tcpserver import TCPServer
 from tornado import gen
 
+
 class McpTcpServer(TCPServer):
-    
+
     def __init__(self, config, dataQueue):
         super(McpTcpServer, self).__init__()
         self.config = config
         self.dataQueue = dataQueue
         self.connections = {}
-        self.nextConnectionId = 0;
+        self.nextConnectionId = 0
         self.logger = logging.getLogger('McpTcpServer')
 
     def send(self, connectionId, message):
@@ -31,22 +32,21 @@ class McpTcpServer(TCPServer):
                     break
             else:
                 return channel
-    
 
     # gen.coroutine was swallowing errors since it's returning a future. This bubbles errors up.
     @gen.engine
     def handle_stream(self, stream, address):
         try:
-            connectionId = self.nextConnectionId;
+            connectionId = self.nextConnectionId
             self.nextConnectionId += 1
             ip = address[0]
             port = address[1]
             logger = logging.getLogger('socket-{0}@{1}:{2}'.format(connectionId, ip, port))
             logger.info("Connection opened")
-        
+
             # Initial packet
             line = yield stream.read_until('\n')
-            gwInfo = json.loads(line);
+            gwInfo = json.loads(line)
             logger.info("Received initial information: %s", gwInfo)
 
             # Check conditions
@@ -78,7 +78,7 @@ class McpTcpServer(TCPServer):
 
             # Configure radios
             self.send(connectionId, {
-                "type":"configure",
+                "type": "configure",
                 "configurations": [
                     ["ATPK08", "ATCN02", "ATAC", "ATDN"],
                     ["ATPK3A", "ATCN" + binascii.hexlify(struct.pack("B", mainChannel)), "ATAC", "ATDN"]
@@ -90,7 +90,6 @@ class McpTcpServer(TCPServer):
                 response = yield stream.read_until('\n')
                 logger.info("Received: %s (%s)", response.strip(), ip)
 
-
         except tornado.iostream.StreamClosedError as e:
             self.connections[connectionId]['logger'].warn("Connection has been closed")
             self.remove_connection(connectionId)
@@ -99,11 +98,10 @@ class McpTcpServer(TCPServer):
             loggerForException = self.logger
             if connectionId in self.connections:
                 loggerForException = self.connections[connectionId]['logger']
-            loggerForException.error("Unexpected exception found for connection %s: '%s' %s", ip, sys.exc_info()[0], e);
+            loggerForException.error("Unexpected exception found for connection %s: '%s' %s", ip, sys.exc_info()[0], e)
             stream.close()
             self.remove_connection(connectionId)
             raise
-         
 
     def remove_connection(self, connectionId):
         if connectionId in self.connections:
