@@ -1,14 +1,9 @@
-Software
-========
+# EMFCamp 2014 Badge Network Controller
 
-PC Software for using the TiLDA v2
+The *MCP* program is the hub, run it on a server. The *gateway* code
+runs on each raspberry pi, which all connect back to the MCP.
 
-## mcp
-This is the bit that's managing all communication to and from the gateways. It listens for TCP connections on port 36000
-
-## gateway
-The gateway software runs on small clients that are equipped with 2 or more usb radios. On startup they'll establish connections to the ,mcp.
-
+The gateways have the radios.
 
 ## Developing
 
@@ -18,7 +13,10 @@ With VirtualBox and Vagrant installed, run:
     $ vagrant ssh
     $ cd /vagrant/  # this is the mounted dir from your host
 
-etc.
+## Running
+
+    $ bin/mcp.py
+    $ bin/gateway.py localhost abc
 
 ## API
 
@@ -30,5 +28,6 @@ We'll want helper-handlers, like posting to /send-weather or something.
 Send a message:
 
     curl -XPOST -d "hello" "http://localhost:8888/send?rid=1&connection=2"
+
 
 

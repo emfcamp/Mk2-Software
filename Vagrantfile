@@ -22,7 +22,6 @@ Vagrant.configure("2") do |config|
       n.ssh.forward_agent = true
       n.vm.provider "virtualbox" do |v|
         v.customize ["modifyvm", :id, "--memory", BOX_RAM]
-        v.customize ["modifyvm", :id, "--ioapic", "on"]
         v.customize ["modifyvm", :id, "--cpus", 1]
       end
       n.vm.provision "shell", inline: $script
