@@ -9,10 +9,11 @@ setup(name='emfmcp',
       author='Badge Monkey',
       author_email='hello@emfcamp.org',
       url='http://www.emfcamp.org',
-      packages=['emfmcp'],
+      packages=['emfmcp', 'emfgateway'],
       scripts=glob.glob('bin/*.py'),
       install_requires=[
           "tornado >= 4.0.1",
-          "psycopg2 >= 2.4.6",
+          "pyserial >= 2.7",
+          #"psycopg2 >= 2.4.6",
       ],
       )
