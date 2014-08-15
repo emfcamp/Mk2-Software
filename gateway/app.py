@@ -35,15 +35,19 @@ class UsbRadios:
         self.logger.info("Entering AT mode...")
         for radio_id, information in enumerate(self.radio_information):
             self._send(radio_id, "+++")
+
         time.sleep(1.1) # Wait before we send additional command
         for radio_id, information in enumerate(self.radio_information):
-
+            self._flushInput(radio_id)
+            self._send(radio_id, "AT\r\n")
             result = self._readLine(radio_id)
             if result != 'OK':
                 self.logger.error("Couldn't enter AT mode on radio %s, got %s", information['path'], result)
                 result = self._readLine(radio_id)
                 sys.exit(1)
             self.logger.info("Reading information for %s", information['path'])
+            self._send(radio_id, "ATZD3\r\n")
+            self._readLine(radio_id)
             self._send(radio_id, "ATVR\r\n")
             information['firmware'] = self._readLine(radio_id)
             self.logger.info("Firmware: %s", information['firmware'])
@@ -62,6 +66,8 @@ class UsbRadios:
             self._send(radio_id, "+++")
         time.sleep(1.1) # Wait before we send commands
         for radio_id, configuration in enumerate(configurations):
+            self._flushInput(radio_id)
+            self._send(radio_id, "AT\r\n")
             result = self._readLine(radio_id)
             if result != 'OK':
                 self.logger.error("Couldn't enter AT mode on radio %d, got %s", radio_id, result)
@@ -72,6 +78,9 @@ class UsbRadios:
                 self.logger.info("Applied command '%s' to radio %d, got '%s'", command, radio_id, result)
 
 
+    def _flushInput(self, radio_id):
+        serial_connection = self.serial_connections[radio_id]
+        serial_connection.flushInput()
     def _send(self, radio_id, content):
         serial_connection = self.serial_connections[radio_id]
         serial_connection.write(content)
