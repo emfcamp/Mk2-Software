@@ -5,6 +5,7 @@ import logging
 import readlines
 import binascii
 import threading
+import traceback
 
 
 class Gateway:
@@ -52,6 +53,7 @@ class Gateway:
         except:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             self.logger.error("Unexpected exception found in transmitter: %s %s %s", exc_type, exc_value, exc_traceback)
+            traceback.print_exception(exc_type, exc_value, exc_traceback)
             self.socket.close()
             sys.exit(1)
 
