@@ -1,27 +1,24 @@
-import logging
 import tornado
 import binascii
 
 
 class MainChannelSender:
-    def __init__(self, config, mcpTcpServer, dataQueue):
-        self.config = config
-        self.mcpTcpServer = mcpTcpServer
-        self.dataQueue = dataQueue
-        self.logger = logging.getLogger('discoveryChannelTimer')
+    def __init__(self, ctx):
+        self.ctx = ctx
+        self.logger = ctx.get_logger().bind(origin='MainChannelSender')
 
     def start(self):
-        delay = self.config["radioNormalPacketDelay"]
-        self.logger.info("Starting normal channel timer with delay %dms", delay)
+        delay = self.ctx.config["radioNormalPacketDelay"]
+        self.logger.info("starting_normal_channel_timer", delay=delay)
         self.ioloop = tornado.ioloop.PeriodicCallback(self.tick, delay)
         self.ioloop.start()
 
     def tick(self):
-        #self.logger.info("Main sending tick, %d connected clients" % (len(self.mcpTcpServer.connections)))
-        for connectionId, connection in self.mcpTcpServer.connections.items():
-            payload = self.dataQueue.get_next_packet(connectionId)
+        for connectionId, connection in self.ctx.tcpserver.connections.items():
+            #self.logger.debug("tick", num_connections=(len(self.ctx.tcpserver.connections)))
+            payload = self.ctx.q.get_next_packet(connectionId)
             if payload is not None:
-                self.mcpTcpServer.send(connectionId, {
+                self.ctx.tcpserver.send(connectionId, {
                     "type": "send",
                     "radioId": 1,
                     "payload": binascii.hexlify(payload)

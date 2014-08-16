@@ -1,4 +1,3 @@
-import logging
 import tornado
 import struct
 import binascii
@@ -6,24 +5,25 @@ import time
 
 
 class DiscoveryChannelTimer:
-    def __init__(self, config, mcpTcpServer):
-        self.config = config
-        self.mcpTcpServer = mcpTcpServer
+    def __init__(self, ctx):
+        self.ctx = ctx
         self.connectionIndex = 0
-        self.logger = logging.getLogger('discoveryChannelTimer')
+        self.logger = ctx.get_logger().bind(origin='discoveryChannelTimer')
 
     def start(self):
-        delay = self.config["radioDiscoveryPacketDelay"]
-        self.logger.info("Starting discovery channel timer with delay %dms", delay)
+        delay = self.ctx.config["radioDiscoveryPacketDelay"]
+        self.logger.info("starting_discovery_channel_timer", delay=delay)
         self.ioloop = tornado.ioloop.PeriodicCallback(self.tick, delay)
         self.ioloop.start()
 
     def tick(self):
-        if len(self.mcpTcpServer.connections) > 0:
-            self.connectionIndex = (self.connectionIndex + 1) % len(self.mcpTcpServer.connections)
-            connectionIds = self.mcpTcpServer.connections.keys()
+        num_connections = len(self.ctx.tcpserver.connections)
+        if num_connections > 0:
+            #self.logger.debug("tick", num_connections=num_connections)
+            self.connectionIndex = (self.connectionIndex + 1) % len(self.ctx.tcpserver.connections)
+            connectionIds = self.ctx.tcpserver.connections.keys()
             connectionId = connectionIds[self.connectionIndex]
-            connection = self.mcpTcpServer.connections[connectionId]
+            connection = self.ctx.tcpserver.connections[connectionId]
 
             mainChannel = connection["mainChannel"]
             timestamp = time.time()
@@ -31,7 +31,7 @@ class DiscoveryChannelTimer:
 
             payload = struct.pack('> B I 3s', mainChannel, timestamp, identifier)
 
-            self.mcpTcpServer.send(connectionId, {
+            self.ctx.tcpserver.send(connectionId, {
                 "type": "send",
                 "radioId": 0,
                 "payload": binascii.hexlify(payload)

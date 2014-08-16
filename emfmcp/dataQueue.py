@@ -1,20 +1,20 @@
-import logging
 import collections
 import packet
 
 
 class DataQueue:
-    def __init__(self):
-        self.logger = logging.getLogger('dataQueue')
+    def __init__(self, ctx):
+        self.logger = ctx.get_logger().bind(origin='DataQueue')
+        self.ctx = ctx
         self.drainEventHandlers = []
         self.queues = {}
 
     def add_message(self, connectionId, rid, payload):
-        self.logger.debug("Queuing data for connection %d and rid %d. Length %d", connectionId, rid, len(payload))
+        self.logger.debug("enqueuing_message", cid=connectionId, rid=rid, payload_len=len(payload))
 
         if connectionId not in self.queues:
             self.queues[connectionId] = collections.deque()
-            self.logger.info("Data queue for connection %d has been created", connectionId)
+            self.logger.info("data_queue_created", cid=connectionId)
         queue = self.queues[connectionId]
         # Serialize and add packets to the queue for this payload
         p = packet.Packet(rid, payload)
@@ -22,9 +22,9 @@ class DataQueue:
 
     def delete_connection(self, connectionId):
         if connectionId in self.queues:
-            self.logger.info("Removing connection id from data queue: %d", connectionId)
+            self.logger.info("removing_connection", cid=connectionId)
         else:
-            self.logger.warn("No data queue for connection id %d found", connectionId)
+            self.logger.warn("no_such_q", cid=connectionId)
 
     def get_next_packet(self, connectionId):
         if connectionId in self.queues:

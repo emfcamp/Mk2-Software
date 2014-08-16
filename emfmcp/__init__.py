@@ -6,6 +6,7 @@ import dataQueue
 import messageReplenisher
 import packet
 import httpd
+import jsonlogger
 
 Main = main.Main
 McpTcpServer = mcpTcpServer.McpTcpServer
@@ -15,3 +16,4 @@ DataQueue = dataQueue.DataQueue
 MessageReplenisher = messageReplenisher.MessageReplenisher
 Packet = packet.Packet
 HTTPd = httpd
+GetLoggerGetter = jsonlogger.get_get_logger

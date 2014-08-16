@@ -1,26 +1,27 @@
 #!/usr/bin/env python
 import json
-import logging
 import emfmcp
 
 
-# Set up logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# Global state object, passed around everywhere
+class Context(object):
+    __slots__ = ('config', 'q', 'tcpserver', 'mcs', 'dcs', 'get_logger')
 
-# Load config file
-config = json.load(open('etc/config.json'))
 
-# Inject dependencies
-dataQueue = emfmcp.DataQueue()
+ctx = Context()
+ctx.get_logger = emfmcp.GetLoggerGetter()
 
-mcpTcpServer = emfmcp.McpTcpServer(config, dataQueue)
-mainChannelSender = emfmcp.MainChannelSender(config, mcpTcpServer, dataQueue)
-discoveryChannelTimer = emfmcp.DiscoveryChannelTimer(config, mcpTcpServer)
-main = emfmcp.Main(config, mcpTcpServer)
 
-# Start
-##messageReplenisher.start()
-discoveryChannelTimer.start()
-mainChannelSender.start()
-emfmcp.HTTPd.listen(config, dataQueue, 8888)
+ctx.config = json.load(open('etc/config.json'))
+ctx.get_logger().info("loaded_config", config=json.dumps(ctx.config))
+ctx.q = emfmcp.DataQueue(ctx)
+ctx.tcpserver = emfmcp.McpTcpServer(ctx)
+ctx.mcs = emfmcp.MainChannelSender(ctx)
+ctx.dcs = emfmcp.DiscoveryChannelTimer(ctx)
+
+ctx.dcs.start()
+ctx.mcs.start()
+emfmcp.HTTPd.listen(ctx, 8888)
+
+main = emfmcp.Main(ctx)
 main.start()

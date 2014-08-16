@@ -14,5 +14,6 @@ setup(name='emfmcp',
       install_requires=[
           "tornado >= 4.0.1",
           "pyserial >= 2.7",
+          "structlog >= 0.4.2",
       ],
       )

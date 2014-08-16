@@ -1,4 +1,3 @@
-import logging
 import json
 import sys
 import tornado
@@ -10,20 +9,19 @@ from tornado import gen
 
 class McpTcpServer(TCPServer):
 
-    def __init__(self, config, dataQueue):
+    def __init__(self, ctx):
         super(McpTcpServer, self).__init__()
-        self.config = config
-        self.dataQueue = dataQueue
+        self.ctx = ctx
         self.connections = {}
         self.nextConnectionId = 0
-        self.logger = logging.getLogger('McpTcpServer')
+        self.logger = ctx.get_logger().bind(origin='TcpServer')
 
     def send(self, connectionId, message):
         connection = self.connections[connectionId]
         if connection:
             connection['stream'].write(json.dumps(message) + "\n")
         else:
-            self.logger.warn("Trying to send to connection that is already closed: %d", connectionId)
+            self.logger.warn("Trying to send to connection that is already closed", cid=connectionId)
 
     def get_unused_channel(self):
         for channel in range(6, 200, 2):
@@ -38,33 +36,33 @@ class McpTcpServer(TCPServer):
     def handle_stream(self, stream, address):
         try:
             connectionId = self.nextConnectionId
+            self.logger.info("handle_stream", connId=connectionId)
             self.nextConnectionId += 1
             ip = address[0]
             port = address[1]
-            logger = logging.getLogger('socket-{0}@{1}:{2}'.format(connectionId, ip, port))
-            logger.info("Connection opened")
+            log = self.ctx.get_logger().bind(origin='tcpserver', cid=connectionId, ip=ip, port=port)
+            log.info("socket_connected")
 
             # Initial packet
             line = yield stream.read_until('\n')
             gwInfo = json.loads(line)
-            logger.info("Received initial information: %s", gwInfo)
+            log.info("got_initial_info", gwinfo=gwInfo)
 
             # Check conditions
             numberOfRadios = gwInfo["numberOfRadios"]
             identifier = gwInfo["identifier"]
             if numberOfRadios < 2:
-                logger.warn("Too few radios (%d). Closing connection.", numberOfRadios)
+                log.warn("too_few_radios", num=numberOfRadios)
                 stream.close()
                 return
             if len(identifier) != 3:
-                logger.warn("Invalid identifier: %s. Closing connection.", identifier)
+                log.warn("invalid_identifier", id=identifier)
                 stream.close()
                 return
 
             # Find unused channel
-            logger.info("Find channel...")
             mainChannel = self.get_unused_channel()
-            logger.info("Assigning channel 0x%s",  binascii.hexlify(struct.pack("B", mainChannel)))
+            log.info("assigning_channel", channel=mainChannel)
 
             # Store connection away
             self.connections[connectionId] = {
@@ -72,7 +70,7 @@ class McpTcpServer(TCPServer):
                 "numberOfRadios": numberOfRadios,
                 "identifier": identifier,
                 "stream": stream,
-                "logger": logger,
+                "logger": log,
                 "mainChannel": mainChannel
             }
 
@@ -88,22 +86,22 @@ class McpTcpServer(TCPServer):
             # Wait for incoming data
             while True:
                 response = yield stream.read_until('\n')
-                logger.info("Received: %s (%s)", response.strip(), ip)
+                self.logger.info("msg_recvd", response=response.strip(), ip=ip)
 
         except tornado.iostream.StreamClosedError as e:
-            self.connections[connectionId]['logger'].warn("Connection has been closed")
+            self.connections[connectionId]['logger'].warn("connection_closed_error")
             self.remove_connection(connectionId)
 
         except BaseException as e:
             loggerForException = self.logger
             if connectionId in self.connections:
                 loggerForException = self.connections[connectionId]['logger']
-            loggerForException.error("Unexpected exception found for connection %s: '%s' %s", ip, sys.exc_info()[0], e)
+            loggerForException.error("connection_exception", info=sys.exc_info()[0], e=str(e))
             stream.close()
             self.remove_connection(connectionId)
             raise
 
     def remove_connection(self, connectionId):
         if connectionId in self.connections:
-            self.dataQueue.delete_connection(connectionId)
+            self.ctx.q.delete_connection(connectionId)
             del self.connections[connectionId]

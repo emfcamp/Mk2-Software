@@ -1,16 +1,15 @@
 import tornado.ioloop
 import tornado.web
-import logging
 from tornado.web import url, RequestHandler
 
 
 class Application(tornado.web.Application):
-    def __init__(self, config, q, handlers):
-        self.logger = logging.getLogger('HTTPd')
+    def __init__(self, ctx, handlers):
+        self.logger = ctx.get_logger().bind(origin='web')
         settings = dict(debug=True)
         super(Application, self).__init__(handlers, **settings)
-        self.config = config
-        self.q = q
+        self.config = ctx.config
+        self.q = ctx.q
 
 
 class IndexHandler(RequestHandler):
@@ -23,14 +22,14 @@ class SendHandler(RequestHandler):
         rid = int(self.get_argument('rid', '-1'))
         cid = int(self.get_argument('connection', '-1'))
         msg = self.request.body
-        self.application.logger.debug("rid: %d, cid: %d, msg: %s" % (rid, cid, msg))
+        self.application.logger.info("send_msg", rid=rid, cid=cid, msg=msg)
 
         self.application.q.add_message(cid, rid, msg)
         self.write("OK")
 
 
-def listen(config, dataQueue, port=8888):
-    application = Application(config, dataQueue, [
+def listen(ctx, port=8888):
+    application = Application(ctx, [
         url(r"/", IndexHandler),
         url(r"/send", SendHandler),
     ])
