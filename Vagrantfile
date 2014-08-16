@@ -7,7 +7,7 @@ BOX_RAM=256
 $script = <<SCRIPT
   apt-get update
   apt-get install -y python-pip python-dev
-  apt-get install -y postgresql-9.1 postgresql-client-9.1 postgresql-server-dev-9.1
+  #apt-get install -y postgresql-9.1 postgresql-client-9.1 postgresql-server-dev-9.1
   pip install setuptools
   cd /vagrant
   ./setup.py develop
