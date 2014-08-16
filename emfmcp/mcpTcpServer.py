@@ -58,7 +58,7 @@ class Connection(object):
                          rid=rid
                          )
 
-        body = msg[2:]
+        body = payload[2:]
         if rid == RID.RETURN_BADGE_IDS:
             return self.handle_return_badge_ids(body)
 
