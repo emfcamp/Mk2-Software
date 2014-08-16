@@ -46,11 +46,18 @@ class Connection(object):
                         #sender="%s:%d" % (self.ip, self.port),
                         #connectionId=self.cid,
                         #)
-        rid = struct.unpack('>H', msg[0:2])
+        msg = json.loads(msg)
+        payload = binascii.unhexlify(msg['payload'])
+
+        if len(payload) < 4:
+            return # broken packet or similar
+        rid = struct.unpack('>H', payload[0:2])[0]
+
         self.logger.info("msg_recvd",
-                         msg=msg,
+                         msg=binascii.hexlify(payload),
                          rid=rid
                          )
+
         body = msg[2:]
         if rid == RID.RETURN_BADGE_IDS:
             return self.handle_return_badge_ids(body)
