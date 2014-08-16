@@ -4,6 +4,7 @@ import logging
 import serial
 import time
 import re
+import binascii
 
 class MockUsbRadios:
     def __init__(self):

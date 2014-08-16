@@ -22,13 +22,16 @@ class TransmitWindowAnnouncer:
 
         # TODO format of "open transmission window" message here:
         rid = 45057 #0xB001
-        open_window_msg = struct.pack('>HL', rid, self.duration)
+        open_window_msg = struct.pack('>L', self.duration)
 
-        def msgBuilder(_cid, _conn):
-            return {
-                "type": "send",
-                "radioId": 1,
-                "payload": binascii.hexlify(open_window_msg)
-            }
+        #def msgBuilder(_cid, _conn):
+        #    return {
+        #        "type": "send",
+        #        "radioId": 1,
+        #        "payload": binascii.hexlify(open_window_msg)
+        #    }
 
-        self.ctx.tcpserver.sendToAll(msgBuilder)
+        #self.ctx.tcpserver.sendToAll(msgBuilder)
+
+        for (cid, conn) in self.ctx.tcpserver.connections.items():
+            self.ctx.q.add_message(cid, rid, open_window_msg)
