@@ -16,6 +16,13 @@ class McpTcpServer(TCPServer):
         self.nextConnectionId = 0
         self.logger = ctx.get_logger().bind(origin='TcpServer')
 
+    def sendToAll(self, msgBuilderFun):
+        numsent = 0
+        for (cid, conn) in self.connections.items():
+            self.send(cid, msgBuilderFun(conn))
+            numsent += 1
+        return numsent
+
     def send(self, connectionId, message):
         connection = self.connections[connectionId]
         if connection:

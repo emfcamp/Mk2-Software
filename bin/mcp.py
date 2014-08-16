@@ -28,9 +28,10 @@ ctx.q = emfmcp.DataQueue(ctx)
 ctx.tcpserver = emfmcp.McpTcpServer(ctx)
 ctx.mcs = emfmcp.MainChannelSender(ctx)
 ctx.dcs = emfmcp.DiscoveryChannelTimer(ctx)
-
 ctx.dcs.start()
 ctx.mcs.start()
+twa = emfmcp.TransmitWindowAnnouncer(ctx)
+twa.start()
 emfmcp.HTTPd.listen(ctx, 8888)
 
 stats = emfmcp.Stats(ctx)

@@ -8,6 +8,7 @@ import packet
 import httpd
 import jsonlogger
 import stats
+import transmitwindowannouncer
 
 Main = main.Main
 McpTcpServer = mcpTcpServer.McpTcpServer
@@ -19,3 +20,4 @@ Packet = packet.Packet
 HTTPd = httpd
 GetLoggerGetter = jsonlogger.get_get_logger
 Stats = stats.Stats
+TransmitWindowAnnouncer = transmitwindowannouncer.TransmitWindowAnnouncer
