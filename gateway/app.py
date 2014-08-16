@@ -21,6 +21,9 @@ class UsbRadios:
         bashFoo = "ls /dev/ttyACM* | xargs -IPATH sh -c \"udevadm info --query=all --name=PATH | grep -q 'ID_MODEL_ID=16a6' && echo PATH\"; true"
         self.serial_devices = subprocess.check_output(bashFoo, shell=True).strip().split('\n')
 
+        # Regex that matches a packet
+        self.packet_regex = re.compile('.{1,58}|-\d{3}')
+
         # Connect via serial
         self.radio_information = []
         self.serial_connections = []
@@ -81,6 +84,7 @@ class UsbRadios:
     def _flushInput(self, radio_id):
         serial_connection = self.serial_connections[radio_id]
         serial_connection.flushInput()
+
     def _send(self, radio_id, content):
         serial_connection = self.serial_connections[radio_id]
         serial_connection.write(content)
@@ -100,7 +104,7 @@ class UsbRadios:
     def readPacket(self, radio_id, length):
         serial_connection = self.serial_connections[radio_id]
         data = b"";
-        while len(data) < length:
+        while not self.packet_regex.match(data):
             data = data + serial_connection.read(1)
             n = serial_connection.inWaiting()
             if n + len(data) > length:
@@ -121,11 +125,14 @@ class Gateway:
             self.logger.info("Receiver started")
             while True:
                 packet = self.usb_radios.readPacket(1, 58)
+                rssi = int(packet[-4:])
+                packet = packet[:-5]
+                self.logger.debug("Received packet with rssi %d: %s", rssi, packet)
                 message = {
                     "type": "received",
                     "radioId": 1,
                     "payload": binascii.hexlify(packet),
-                    "rssi": "not_done_yet"
+                    "rssi": rssi
                 }
                 socket.send(json.dumps(message) + "\n")
         except:
@@ -191,6 +198,7 @@ if __name__ == '__main__':
     # Connect to mcp
     socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     socket.connect((hostname, 36000))
+    socket.settimeout(3.0)
     initialInformation = {
         "type": "initial",
         "numberOfRadios": usb_radios.getNumberOfRadios(),
