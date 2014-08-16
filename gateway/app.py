@@ -1,33 +1,17 @@
+#!/usr/bin/env python
+import os
 import sys
+import re
 import subprocess
+import socket
+import json
 import logging
+import readlines
 import serial
 import time
-import re
-
-class MockUsbRadios:
-    def __init__(self):
-        self.logger = logging.getLogger('MockUsbRadios')
-
-    def setup(self):
-        pass
-
-    def sendPacket(self, radio_id, packet):
-        self.logger.info("sendPacket %d %s" % (radio_id, packet))
-        pass
-
-    def sendConfig(self, configurations):
-        self.logger.info("sendConfig %r" % configurations)
-        pass
-
-    def getNumberOfRadios(self):
-        return 2
-
-    def getInformation(self):
-        return []
-
-    def readPacket(self, radio_id, length):
-        return None
+import binascii
+import threading
+from uuid import getnode as get_mac
 
 class UsbRadios:
     def __init__(self):
@@ -129,3 +113,111 @@ class UsbRadios:
             if n:
                 data = data + serial_connection.read(n)
         return data
+
+
+class Gateway:
+    def __init__(self, aUsbRadios, aSocket):
+        self.usb_radios = aUsbRadios
+        self.socket = aSocket
+        self.logger = logging.getLogger('Gateway')
+
+    def receiver(self):
+        try:
+            self.logger.info("Receiver started")
+            while True:
+                packet = self.usb_radios.readPacket(1, 58)
+                rssi = int(packet[-4:])
+                packet = packet[:-5]
+                self.logger.debug("Received packet with rssi %d: %s", rssi, packet)
+                message = {
+                    "type": "received",
+                    "radioId": 1,
+                    "payload": binascii.hexlify(packet),
+                    "rssi": rssi
+                }
+                socket.send(json.dumps(message) + "\n")
+        except:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            self.logger.error("Unexpected exception found in receiver: %s %s %s", exc_type, exc_value, exc_traceback);
+            self.socket.close()
+            sys.exit(1)
+
+    def transmitter(self):
+        try:
+            self.logger.info("Transmitter started")
+            for line in readlines.readlines(self.socket):
+                packet = json.loads(line)
+                if packet["type"] == 'configure':
+                    usb_radios.sendConfig(packet["configurations"])
+                    # Only start the receive after the configuration packet has been send
+                    self.startReceiver()
+                elif packet["type"] == 'send':
+                    payload = binascii.unhexlify(packet["payload"])
+                    usb_radios.sendPacket(packet["radioId"], payload)
+                else:
+                    logger.warn("Received invalid packet: %s", packet)
+        except:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            self.logger.error("Unexpected exception found in transmitter: %s %s %s", exc_type, exc_value, exc_traceback);
+            self.socket.close()
+            sys.exit(1)
+
+    def startReceiver(self):
+        self.thread_receiver = threading.Thread(target=self.receiver)
+        self.thread_receiver.setDaemon(True)
+        self.thread_receiver.setName('reveiver')
+        self.thread_receiver.start()
+
+    def startTransmitter(self):
+        self.thread_transmitter = threading.Thread(target=self.transmitter)
+        self.thread_transmitter.setDaemon(True)
+        self.thread_transmitter.setName('transmitter')
+        self.thread_transmitter.start()
+
+    def stop(self):
+        self.log.debug('stopping')
+
+if __name__ == '__main__':
+    # Parse arguments
+    if len(sys.argv) < 3:
+        print "Usage: ./app.py <hostname_to_connect_to> <3_character_identifier>"
+        sys.exit(1)
+    hostname = sys.argv[1]
+    identifier = sys.argv[2]
+    if len(identifier) != 3:
+        print "Identifier needs to be exactly 3 ASCII characters long"
+        sys.exit(1)
+
+    # Set up logging
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger = logging.getLogger('main')
+
+    # Find and connect to radios
+    usb_radios = UsbRadios()
+    usb_radios.setup();
+
+    # Get MAC ID
+    mac = get_mac()
+    logger.info("MAC: %s", mac);
+
+    # Connect to mcp
+    socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    socket.connect((hostname, 36000))
+    socket.settimeout(3.0)
+    initialInformation = {
+        "type": "initial",
+        "numberOfRadios": usb_radios.getNumberOfRadios(),
+        "identifier": identifier,
+        "radios": usb_radios.getInformation(),
+        "mac": mac
+    }
+    socket.send(json.dumps(initialInformation) + "\n")
+    logger.info("Established connection to mcp")
+
+    # Start gatway
+    gateway = Gateway(usb_radios, socket);
+    gateway.startTransmitter()
+
+    # Idle
+    while True:
+        pass

@@ -4,7 +4,7 @@ import logging
 import sys
 import emfgateway
 import socket
-
+from uuid import getnode as get_mac
 
 # Parse arguments
 if len(sys.argv) < 3:
@@ -24,14 +24,20 @@ logger = logging.getLogger('main')
 usb_radios = emfgateway.MockUsbRadios()
 usb_radios.setup()
 
+# Get MAC ID
+mac = get_mac()
+logger.info("MAC: %s", mac);
+
 # Connect to mcp
 socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket.connect((hostname, 36000))
+socket.settimeout(3.0)
 initialInformation = {
     "type": "initial",
     "numberOfRadios": usb_radios.getNumberOfRadios(),
     "identifier": identifier,
-    "radios": usb_radios.getInformation()
+    "radios": usb_radios.getInformation(),
+    "mac": mac
 }
 socket.send(json.dumps(initialInformation) + "\n")
 logger.info("Established connection to mcp")
