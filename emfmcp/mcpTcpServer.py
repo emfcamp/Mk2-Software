@@ -7,6 +7,22 @@ from tornado.tcpserver import TCPServer
 from tornado import gen
 
 
+class RID:
+    UNIDENTIFIED = 0x0000
+    ACK_RECEIVER = 0x9001
+    IDENT = 0x9002
+    PINGPONG = 0x9003
+    BATTERY = 0x9004
+
+    WEATHER = 0xA002
+    SCHEDULE_FRI = 0xA003
+    SCHEDULE_SAT = 0xA004
+    SCHEDULE_SUN = 0xA005
+
+    OPEN_TRANSMIT_WINDOW = 0xB001
+    RETURN_BADGE_IDS = 0xB002
+
+
 class Connection(object):
     """State object, one per TCP connection to a gateway"""
 
@@ -35,15 +51,16 @@ class Connection(object):
                          msg=msg,
                          rid=rid
                          )
-        if rid == 0xb002:
-            return self.handle_short_id_service(msg[2:])
+        body = msg[2:]
+        if rid == RID.RETURN_BADGE_IDS:
+            return self.handle_return_badge_ids(body)
 
         self.logger.warn("unhandled_msg_received", rid=rid)
 
-    def handle_short_id_service(self, msg):
+    def handle_return_badge_ids(self, msg):
         sender_id = struct.unpack('>H', msg[0:2])
         unique_id = msg[2:18]
-        self.logger.info("short_id_msg", sender_id=sender_id, unique_id=unique_id)
+        self.logger.info("badge_id_msg", sender_id=sender_id, unique_id=unique_id)
 
 
 class McpTcpServer(TCPServer):
