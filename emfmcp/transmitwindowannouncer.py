@@ -21,8 +21,8 @@ class TransmitWindowAnnouncer:
             return
 
         # TODO format of "open transmission window" message here:
-        radio_id = 1
-        open_window_msg = struct.pack('>HL', radio_id, self.duration)
+        rid = 45057 #0xB001
+        open_window_msg = struct.pack('>HL', rid, self.duration)
 
         def msgBuilder(_cid, _conn):
             return {

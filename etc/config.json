@@ -1,7 +1,7 @@
 {
     "port": 36000,
     "hostname": "localhost",
-    "radioDiscoveryPacketDelay": 500,
+    "radioDiscoveryPacketDelay": 50,
     "radioNormalPacketDelay": 10,
     "transmitWindowInterval": 2000,
     "transmitWindowDuration": 1000

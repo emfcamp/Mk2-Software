@@ -74,6 +74,8 @@ class UsbRadios:
             self._send(radio_id, "ATDN\r\n")
 
     def sendPacket(self, radio_id, packet):
+        if radio_id == 1:
+            packet = packet.ljust(58, '\0')
         self._send(radio_id, packet)
         self.packets_send[radio_id] += 1
         if self.packets_send[radio_id] % 100 == 0:

@@ -21,7 +21,8 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(leve
 logger = logging.getLogger('main')
 
 # Find and connect to radios
-usb_radios = emfgateway.MockUsbRadios()
+#usb_radios = emfgateway.MockUsbRadios()
+usb_radios = emfgateway.UsbRadios()
 usb_radios.setup()
 
 # Get MAC ID

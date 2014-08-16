@@ -40,7 +40,7 @@ class Gateway:
             self.logger.info("Transmitter started")
             for line in readlines.readlines(self.socket):
                 packet = json.loads(line)
-                self.logger.info("transmitter doing: %r" % packet)
+                #self.logger.info("transmitter doing: %r" % packet)
                 if packet["type"] == 'configure':
                     self.usb_radios.sendConfig(packet["configurations"])
                     # Only start the receive after the configuration packet has been send
