@@ -7,14 +7,10 @@ import socket
 from uuid import getnode as get_mac
 
 # Parse arguments
-if len(sys.argv) < 3:
-    print "Usage: ./app.py <hostname_to_connect_to> <3_character_identifier>"
-    sys.exit(1)
-hostname = sys.argv[1]
-identifier = sys.argv[2]
-if len(identifier) != 3:
-    print "Identifier needs to be exactly 3 ASCII characters long"
-    sys.exit(1)
+if len(sys.argv) == 2:
+    hostname = sys.argv[1]
+else:
+    hostname = "localhost" # ToDo: replace with real hostname
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -36,9 +32,9 @@ socket.settimeout(3.0)
 initialInformation = {
     "type": "initial",
     "numberOfRadios": usb_radios.getNumberOfRadios(),
-    "identifier": identifier,
     "radios": usb_radios.getInformation(),
-    "mac": mac
+    "mac": mac,
+    "identifier":"xxx" # ToDo: Remove this when the mcp doesn't need this anymore
 }
 socket.send(json.dumps(initialInformation) + "\n")
 logger.info("Established connection to mcp")
