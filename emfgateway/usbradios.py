@@ -93,6 +93,7 @@ class UsbRadios:
                 self.logger.error("Couldn't enter AT mode on radio %d, got %s", radio_id, result)
                 raise Exception()
             for command in configuration:
+                command = command.encode('ascii', 'ignore')
                 self._send(radio_id, command + "\r\n")
                 result = self._readLine(radio_id)
                 self.logger.info("Applied command '%s' to radio %d, got '%s'", command, radio_id, result)
