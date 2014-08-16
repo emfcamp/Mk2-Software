@@ -14,12 +14,17 @@ class MainChannelSender:
         self.ioloop.start()
 
     def tick(self):
-        for connectionId, connection in self.ctx.tcpserver.connections.items():
-            #self.logger.debug("tick", num_connections=(len(self.ctx.tcpserver.connections)))
-            payload = self.ctx.q.get_next_packet(connectionId)
-            if payload is not None:
-                self.ctx.tcpserver.send(connectionId, {
+        q = self.ctx.q
+
+        def msgBuilder(cid, _conn):
+            payload = q.get_next_packet(cid)
+            if payload is None:
+                return None
+            else:
+                return {
                     "type": "send",
                     "radioId": 1,
                     "payload": binascii.hexlify(payload)
-                })
+                }
+
+        self.ctx.tcpserver.sendToAll(msgBuilder)

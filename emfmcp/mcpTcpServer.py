@@ -19,8 +19,10 @@ class McpTcpServer(TCPServer):
     def sendToAll(self, msgBuilderFun):
         numsent = 0
         for (cid, conn) in self.connections.items():
-            self.send(cid, msgBuilderFun(conn))
-            numsent += 1
+            m = msgBuilderFun(cid, conn)
+            if m is not None:
+                self.send(cid, m)
+                numsent += 1
         return numsent
 
     def send(self, connectionId, message):

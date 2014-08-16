@@ -17,22 +17,18 @@ class DiscoveryChannelTimer:
         self.ioloop.start()
 
     def tick(self):
-        num_connections = len(self.ctx.tcpserver.connections)
-        if num_connections > 0:
-            #self.logger.debug("tick", num_connections=num_connections)
-            self.connectionIndex = (self.connectionIndex + 1) % len(self.ctx.tcpserver.connections)
-            connectionIds = self.ctx.tcpserver.connections.keys()
-            connectionId = connectionIds[self.connectionIndex]
-            connection = self.ctx.tcpserver.connections[connectionId]
 
-            mainChannel = connection["mainChannel"]
-            timestamp = time.time()
+        def msgBuilder(connectionId, connection):
             identifier = connection["identifier"].encode('ascii', 'replace')
-
-            payload = struct.pack('> B I 3s', mainChannel, timestamp, identifier)
-
-            self.ctx.tcpserver.send(connectionId, {
+            payload = struct.pack('> B I 3s',
+                                  connection["mainChannel"],
+                                  time.time(),
+                                  identifier
+                                  )
+            return {
                 "type": "send",
                 "radioId": 0,
                 "payload": binascii.hexlify(payload)
-            })
+            }
+
+        self.ctx.tcpserver.sendToAll(msgBuilder)

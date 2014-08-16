@@ -24,7 +24,7 @@ class TransmitWindowAnnouncer:
         radio_id = 1
         open_window_msg = struct.pack('>HL', radio_id, self.duration)
 
-        def msgBuilder(_conn):
+        def msgBuilder(_cid, _conn):
             return {
                 "type": "send",
                 "radioId": 1,
