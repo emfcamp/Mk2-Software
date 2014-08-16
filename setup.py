@@ -15,5 +15,6 @@ setup(name='emfmcp',
           "tornado >= 4.0.1",
           "pyserial >= 2.7",
           "structlog >= 0.4.2",
+          "PyDispatcher >= 2.0.3",
       ],
       )

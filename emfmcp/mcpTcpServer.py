@@ -65,7 +65,7 @@ class McpTcpServer(TCPServer):
             log.info("assigning_channel", channel=mainChannel)
 
             # Store connection away
-            self.connections[connectionId] = {
+            conn_info = {
                 "connectionId": connectionId,
                 "numberOfRadios": numberOfRadios,
                 "identifier": identifier,
@@ -73,6 +73,13 @@ class McpTcpServer(TCPServer):
                 "logger": log,
                 "mainChannel": mainChannel
             }
+            self.connections[connectionId] = conn_info
+
+            self.ctx.pub('gateway_connected',
+                         sender="%s:%d" % (ip, port),
+                         connectionId=connectionId,
+                         identifier=identifier,
+                         )
 
             # Configure radios
             self.send(connectionId, {
@@ -86,6 +93,10 @@ class McpTcpServer(TCPServer):
             # Wait for incoming data
             while True:
                 response = yield stream.read_until('\n')
+                self.ctx.pub('msg_recvd',
+                             sender="%s:%d" % (ip, port),
+                             connectionId=connectionId,
+                             )
                 self.logger.info("msg_recvd", response=response.strip(), ip=ip)
 
         except tornado.iostream.StreamClosedError as e:
@@ -105,3 +116,6 @@ class McpTcpServer(TCPServer):
         if connectionId in self.connections:
             self.ctx.q.delete_connection(connectionId)
             del self.connections[connectionId]
+            self.ctx.pub('gateway_disconnected',
+                         connectionId=connectionId,
+                         )

@@ -7,6 +7,7 @@ import messageReplenisher
 import packet
 import httpd
 import jsonlogger
+import stats
 
 Main = main.Main
 McpTcpServer = mcpTcpServer.McpTcpServer
@@ -17,3 +18,4 @@ MessageReplenisher = messageReplenisher.MessageReplenisher
 Packet = packet.Packet
 HTTPd = httpd
 GetLoggerGetter = jsonlogger.get_get_logger
+Stats = stats.Stats
