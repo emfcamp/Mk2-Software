@@ -19,9 +19,9 @@ class DiscoveryChannelTimer:
     def tick(self):
 
         def msgBuilder(connectionId, connection):
-            identifier = connection["identifier"].encode('ascii', 'replace')
+            identifier = connection.identifier.encode('ascii', 'replace')
             payload = struct.pack('> B I 3s',
-                                  connection["mainChannel"],
+                                  connection.mainChannel,
                                   time.time(),
                                   identifier
                                   )

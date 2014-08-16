@@ -7,6 +7,45 @@ from tornado.tcpserver import TCPServer
 from tornado import gen
 
 
+class Connection(object):
+    """State object, one per TCP connection to a gateway"""
+
+    def __init__(self, **args):
+        self.mac = args['mac']
+        self.ctx = args['ctx']
+        self.cid = args['cid']
+        self.numRadios = args['numberOfRadios']
+        self.identifier = args['identifier']
+        self.stream = args['stream']
+        self.mainChannel = args['mainChannel']
+        self.ip = args['ip']
+        self.port = args['port']
+        self.logger = args['logger'].bind(cid=self.cid,
+                                          gw_addr="%s:%d" % (self.ip, self.port),
+                                          identifier=self.identifier
+                                          )
+
+    def handle_message(self, msg):
+        #self.ctx.pub('msg_recvd',
+                        #sender="%s:%d" % (self.ip, self.port),
+                        #connectionId=self.cid,
+                        #)
+        rid = struct.unpack('>H', msg[0:2])
+        self.logger.info("msg_recvd",
+                         msg=msg,
+                         rid=rid
+                         )
+        if rid == 0xb002:
+            return self.handle_short_id_service(msg[2:])
+
+        self.logger.warn("unhandled_msg_received", rid=rid)
+
+    def handle_short_id_service(self, msg):
+        sender_id = struct.unpack('>H', msg[0:2])
+        unique_id = msg[2:18]
+        self.logger.info("short_id_msg", sender_id=sender_id, unique_id=unique_id)
+
+
 class McpTcpServer(TCPServer):
 
     def __init__(self, ctx):
@@ -28,14 +67,14 @@ class McpTcpServer(TCPServer):
     def send(self, connectionId, message):
         connection = self.connections[connectionId]
         if connection:
-            connection['stream'].write(json.dumps(message) + "\n")
+            connection.stream.write(json.dumps(message) + "\n")
         else:
             self.logger.warn("Trying to send to connection that is already closed", cid=connectionId)
 
     def get_unused_channel(self):
         for channel in range(6, 200, 2):
             for connection in self.connections.itervalues():
-                if connection['mainChannel'] == channel:
+                if connection.mainChannel == channel:
                     break
             else:
                 return channel
@@ -73,16 +112,19 @@ class McpTcpServer(TCPServer):
             mainChannel = self.get_unused_channel()
             log.info("assigning_channel", channel=mainChannel)
 
+            connection = Connection(ctx=self.ctx,
+                                    cid=connectionId,
+                                    numberOfRadios=numberOfRadios,
+                                    identifier=identifier,
+                                    stream=stream,
+                                    logger=self.logger,
+                                    mainChannel=mainChannel,
+                                    ip=ip,
+                                    port=port,
+                                    mac=gwInfo['mac'],
+                                    )
             # Store connection away
-            conn_info = {
-                "connectionId": connectionId,
-                "numberOfRadios": numberOfRadios,
-                "identifier": identifier,
-                "stream": stream,
-                "logger": log,
-                "mainChannel": mainChannel
-            }
-            self.connections[connectionId] = conn_info
+            self.connections[connectionId] = connection
 
             self.ctx.pub('gateway_connected',
                          sender="%s:%d" % (ip, port),
@@ -102,20 +144,16 @@ class McpTcpServer(TCPServer):
             # Wait for incoming data
             while True:
                 response = yield stream.read_until('\n')
-                self.ctx.pub('msg_recvd',
-                             sender="%s:%d" % (ip, port),
-                             connectionId=connectionId,
-                             )
-                self.logger.info("msg_recvd", response=response.strip(), ip=ip)
+                connection.handle_message(response.strip())
 
         except tornado.iostream.StreamClosedError as e:
-            self.connections[connectionId]['logger'].warn("connection_closed_error")
+            self.connections[connectionId].logger.warn("connection_closed_error")
             self.remove_connection(connectionId)
 
         except BaseException as e:
             loggerForException = self.logger
             if connectionId in self.connections:
-                loggerForException = self.connections[connectionId]['logger']
+                loggerForException = self.connections[connectionId].logger
             loggerForException.error("connection_exception", info=sys.exc_info()[0], e=str(e))
             stream.close()
             self.remove_connection(connectionId)
