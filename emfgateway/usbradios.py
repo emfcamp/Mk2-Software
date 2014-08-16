@@ -40,7 +40,7 @@ class UsbRadios:
         self.serial_devices = subprocess.check_output(bashFoo, shell=True).strip().split('\n')
 
         # Regex that matches a packet
-        self.packet_regex = re.compile('.{1,58}|-\d{3}')
+        self.packet_regex = re.compile(r'\|-\d{3}')
 
         # Connect via serial
         self.radio_information = []
@@ -101,6 +101,7 @@ class UsbRadios:
                 result = self._readLine(radio_id)
                 self.logger.info("Applied command '%s' to radio %d, got '%s'", command, radio_id, result)
 
+            self._flushInput(radio_id)
 
     def _flushInput(self, radio_id):
         serial_connection = self.serial_connections[radio_id]
@@ -122,14 +123,11 @@ class UsbRadios:
     def getInformation(self):
         return self.radio_information
 
-    def readPacket(self, radio_id, length):
+    def readPacket(self, radio_id):
         serial_connection = self.serial_connections[radio_id]
         data = b"";
-        while not self.packet_regex.match(data):
+        is_valid_packet = False;
+        while not is_valid_packet:
             data = data + serial_connection.read(1)
-            n = serial_connection.inWaiting()
-            if n + len(data) > length:
-                n = length - len(data)
-            if n:
-                data = data + serial_connection.read(n)
+            is_valid_packet = (len(data) > 5) and self.packet_regex.match(data[-5:])
         return data

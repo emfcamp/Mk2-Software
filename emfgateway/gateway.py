@@ -18,20 +18,21 @@ class Gateway:
         try:
             self.logger.info("Receiver started")
             while True:
-                packet = self.usb_radios.readPacket(1, 58)
-                if packet is None:
-                    self.logger.info("Got None from radio.readPacket, stopping receiver")
-                    return
+                packet = self.usb_radios.readPacket(1)
+                rssi = int(packet[-4:])
+                packet = packet[:-5]
+                self.logger.debug("Received packet with rssi %d: %s", rssi, binascii.hexlify(packet))
                 message = {
                     "type": "received",
                     "radioId": 1,
                     "payload": binascii.hexlify(packet),
-                    "rssi": "not_done_yet"
+                    "rssi": rssi
                 }
-                socket.send(json.dumps(message) + "\n")
+                self.socket.send(json.dumps(message) + "\n")
         except:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             self.logger.error("Unexpected exception found in receiver: %s %s %s", exc_type, exc_value, exc_traceback)
+            traceback.print_exception(exc_type, exc_value, exc_traceback)
             self.socket.close()
             sys.exit(1)
 
