@@ -4,6 +4,7 @@ import logging
 import sys
 import emfgateway
 import socket
+import Queue
 from uuid import getnode as get_mac
 
 # Parse arguments
@@ -28,7 +29,6 @@ logger.info("MAC: %s", mac);
 # Connect to mcp
 socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket.connect((hostname, 36000))
-socket.settimeout(3.0)
 initialInformation = {
     "type": "initial",
     "numberOfRadios": usb_radios.getNumberOfRadios(),
@@ -39,10 +39,19 @@ initialInformation = {
 socket.send(json.dumps(initialInformation) + "\n")
 logger.info("Established connection to mcp")
 
+# Shutdown queue
+shutdownQueue = Queue.Queue()
+
 # Start gatway
-gateway = emfgateway.Gateway(usb_radios, socket)
+gateway = emfgateway.Gateway(usb_radios, socket, shutdownQueue)
 gateway.startTransmitter()
 
-# Idle
+# Wait until we get a shutdown signal
 while True:
-    pass
+    try:
+        shutdownMessage = shutdownQueue.get(True, 0.1)
+        logger.warn("Received shutdown signal from thread: " + shutdownMessage)
+        socket.close()
+        sys.exit(1)
+    except Queue.Empty:
+        pass

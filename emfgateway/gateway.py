@@ -9,9 +9,10 @@ import traceback
 
 
 class Gateway:
-    def __init__(self, aUsbRadios, aSocket):
+    def __init__(self, aUsbRadios, aSocket, aShutdownQueue):
         self.usb_radios = aUsbRadios
         self.socket = aSocket
+        self.shutdownQueue = aShutdownQueue
         self.logger = logging.getLogger('Gateway')
 
     def receiver(self):
@@ -33,8 +34,7 @@ class Gateway:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             self.logger.error("Unexpected exception found in receiver: %s %s %s", exc_type, exc_value, exc_traceback)
             traceback.print_exception(exc_type, exc_value, exc_traceback)
-            self.socket.close()
-            sys.exit(1)
+            self.shutdownQueue.put("exception in receiver")
 
     def transmitter(self):
         try:
@@ -55,8 +55,7 @@ class Gateway:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             self.logger.error("Unexpected exception found in transmitter: %s %s %s", exc_type, exc_value, exc_traceback)
             traceback.print_exception(exc_type, exc_value, exc_traceback)
-            self.socket.close()
-            sys.exit(1)
+            self.shutdownQueue.put("exception in transmitter")
 
     def startReceiver(self):
         self.thread_receiver = threading.Thread(target=self.receiver)
