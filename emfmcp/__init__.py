@@ -8,6 +8,8 @@ import httpd
 import jsonlogger
 import stats
 import transmitwindowannouncer
+import badgedb
+import connection
 
 Main = main.Main
 McpTcpServer = mcpTcpServer.McpTcpServer
@@ -19,3 +21,6 @@ HTTPd = httpd
 GetLoggerGetter = jsonlogger.get_get_logger
 Stats = stats.Stats
 TransmitWindowAnnouncer = transmitwindowannouncer.TransmitWindowAnnouncer
+BadgeDB = badgedb.BadgeDB
+Connection = connection.Connection
+RID = connection.RID

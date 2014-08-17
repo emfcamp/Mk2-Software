@@ -5,69 +5,7 @@ import binascii
 import struct
 from tornado.tcpserver import TCPServer
 from tornado import gen
-
-
-class RID:
-    UNIDENTIFIED = 0x0000
-    ACK_RECEIVER = 0x9001
-    IDENT = 0x9002
-    PINGPONG = 0x9003
-    BATTERY = 0x9004
-
-    WEATHER = 0xA002
-    SCHEDULE_FRI = 0xA003
-    SCHEDULE_SAT = 0xA004
-    SCHEDULE_SUN = 0xA005
-
-    OPEN_TRANSMIT_WINDOW = 0xB001
-    RETURN_BADGE_IDS = 0xB002
-
-
-class Connection(object):
-    """State object, one per TCP connection to a gateway"""
-
-    def __init__(self, **args):
-        self.mac = args['mac']
-        self.ctx = args['ctx']
-        self.cid = args['cid']
-        self.numRadios = args['numberOfRadios']
-        self.identifier = args['identifier']
-        self.stream = args['stream']
-        self.mainChannel = args['mainChannel']
-        self.ip = args['ip']
-        self.port = args['port']
-        self.logger = args['logger'].bind(cid=self.cid,
-                                          gw_addr="%s:%d" % (self.ip, self.port),
-                                          identifier=self.identifier
-                                          )
-
-    def handle_message(self, msg):
-        #self.ctx.pub('msg_recvd',
-                        #sender="%s:%d" % (self.ip, self.port),
-                        #connectionId=self.cid,
-                        #)
-        msg = json.loads(msg)
-        payload = binascii.unhexlify(msg['payload'])
-
-        if len(payload) < 4:
-            return # broken packet or similar
-        rid = struct.unpack('>H', payload[0:2])[0]
-
-        self.logger.info("msg_recvd",
-                         msg=binascii.hexlify(payload),
-                         rid=rid
-                         )
-
-        body = payload[2:]
-        if rid == RID.RETURN_BADGE_IDS:
-            return self.handle_return_badge_ids(body)
-
-        self.logger.warn("unhandled_msg_received", rid=rid)
-
-    def handle_return_badge_ids(self, msg):
-        sender_id = struct.unpack('>H', msg[0:2])
-        unique_id = msg[2:18]
-        self.logger.info("badge_id_msg", sender_id=sender_id, unique_id=unique_id)
+from .connection import Connection
 
 
 class McpTcpServer(TCPServer):
@@ -145,7 +83,7 @@ class McpTcpServer(TCPServer):
                                     mainChannel=mainChannel,
                                     ip=ip,
                                     port=port,
-                                    mac=gwInfo['mac'],
+                                    #mac=gwInfo['mac'],
                                     )
             # Store connection away
             self.connections[connectionId] = connection

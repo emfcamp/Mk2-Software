@@ -16,7 +16,7 @@ class Context(object):
     def sub(self, signal_name, callback, sender=dispatcher.Any):
         dispatcher.connect(callback, signal=signal_name, sender=sender)
 
-    __slots__ = ('config', 'q', 'tcpserver', 'mcs', 'dcs', 'get_logger')
+    __slots__ = ('config', 'q', 'tcpserver', 'mcs', 'dcs', 'get_logger', 'badgedb')
 
 
 ctx = Context()
@@ -33,6 +33,7 @@ ctx.mcs.start()
 twa = emfmcp.TransmitWindowAnnouncer(ctx)
 twa.start()
 emfmcp.HTTPd.listen(ctx, 8888)
+ctx.badgedb = emfmcp.BadgeDB(ctx)
 
 stats = emfmcp.Stats(ctx)
 main = emfmcp.Main(ctx)
