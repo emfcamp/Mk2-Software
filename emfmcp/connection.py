@@ -61,7 +61,7 @@ class Connection(object):
             return  # broken packet or similar
 
         rid = struct.unpack('>H', payload[0:2])[0]
-        sender_id = struct.unpack('>H', msg[2:4])[0]
+        sender_id = struct.unpack('>H', payload[2:4])[0]
 
         self.logger.info("msg_recvd",
                          msg=binascii.hexlify(payload),
