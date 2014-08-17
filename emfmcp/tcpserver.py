@@ -8,10 +8,10 @@ from tornado import gen
 from .connection import Connection
 
 
-class McpTcpServer(TCPServer):
+class TcpServer(TCPServer):
 
     def __init__(self, ctx):
-        super(McpTcpServer, self).__init__()
+        super(TcpServer, self).__init__()
         self.ctx = ctx
         self.connections = {}
         self.nextConnectionId = 0

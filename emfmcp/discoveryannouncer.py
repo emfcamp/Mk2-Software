@@ -4,7 +4,7 @@ import binascii
 import time
 
 
-class DiscoveryChannelTimer:
+class DiscoveryAnnouncer:
     def __init__(self, ctx):
         self.ctx = ctx
         self.connectionIndex = 0

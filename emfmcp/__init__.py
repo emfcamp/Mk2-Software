@@ -1,8 +1,8 @@
 import main
-import mcpTcpServer
-import discoveryChannelTimer
-import mainChannelSender
-import dataQueue
+import tcpserver
+import discoveryannouncer
+import mainchannelsender
+import dataqueue
 import packet
 import httpd
 import jsonlogger
@@ -12,10 +12,10 @@ import badgedb
 import connection
 
 Main = main.Main
-McpTcpServer = mcpTcpServer.McpTcpServer
-DiscoveryChannelTimer = discoveryChannelTimer.DiscoveryChannelTimer
-MainChannelSender = mainChannelSender.MainChannelSender
-DataQueue = dataQueue.DataQueue
+TcpServer = tcpserver.TcpServer
+DiscoveryAnnouncer = discoveryannouncer.DiscoveryAnnouncer
+MainChannelSender = mainchannelsender.MainChannelSender
+DataQueue = dataqueue.DataQueue
 Packet = packet.Packet
 HTTPd = httpd
 GetLoggerGetter = jsonlogger.get_get_logger
