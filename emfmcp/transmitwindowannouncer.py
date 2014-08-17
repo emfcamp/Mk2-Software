@@ -33,5 +33,5 @@ class TransmitWindowAnnouncer:
 
         #self.ctx.tcpserver.sendToAll(msgBuilder)
 
-        for (cid, conn) in self.ctx.tcpserver.connections.items():
-            self.ctx.q.add_message(cid, rid, open_window_msg)
+        #for (cid, conn) in self.ctx.tcpserver.connections.items():
+        self.ctx.q.add_message(rid, open_window_msg)

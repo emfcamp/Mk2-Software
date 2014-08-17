@@ -1,6 +1,8 @@
 import tornado.ioloop
 import tornado.web
+import binascii
 from tornado.web import url, RequestHandler
+
 
 
 class Application(tornado.web.Application):
@@ -20,11 +22,11 @@ class IndexHandler(RequestHandler):
 class SendHandler(RequestHandler):
     def post(self):
         rid = int(self.get_argument('rid', '-1'))
-        cid = int(self.get_argument('connection', '-1'))
+        #cid = int(self.get_argument('connection', '-1'))
         msg = self.request.body
-        self.application.logger.info("send_msg", rid=rid, cid=cid, msg=msg)
+        self.application.logger.info("send_msg", rid=rid, msg=binascii.hexlify(msg))
 
-        self.application.q.add_message(cid, rid, msg)
+        self.application.q.add_message(rid, msg)
         self.write("OK")
 
 
