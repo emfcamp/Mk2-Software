@@ -9,13 +9,20 @@ class DataQueue:
         self.drainEventHandlers = []
         self.queues = {}
 
+    def id2q(self, cid):
+        if cid not in self.queues:
+            self.queues[cid] = collections.deque()
+            self.logger.info("data_queue_created", cid=cid)
+        return self.queues[cid]
+
     def add_message(self, rid, payload):
         """Send message on all connections (ie, to all gateways+badges)"""
 
-        self.logger.debug("enqueuing_message", cid='*', rid=rid, payload_len=len(payload))
-        # Serialize and add packets to the queue for this payload
         packets = packet.Packet(rid, payload).packets()
-        for (cid, queue) in self.queues:
+        self.logger.debug("enqueuing_message", cid='*', rid=rid, payload_len=len(payload), num_queues=len(self.queues), num_packets=len(packets))
+        # Serialize and add packets to the queue for this payload
+        for cid, queue in self.queues.iteritems():
+            self.logger.debug("enqueuing_message_on_cid", cid=cid, rid=rid, payload_len=len(payload), numpackets=len(packets))
             queue.extend(packets)
         return True
 
@@ -24,10 +31,7 @@ class DataQueue:
 
         self.logger.debug("enqueuing_message", cid=connectionId, rid=rid, payload_len=len(payload))
 
-        if connectionId not in self.queues:
-            self.queues[connectionId] = collections.deque()
-            self.logger.info("data_queue_created", cid=connectionId)
-        queue = self.queues[connectionId]
+        queue = self.id2q(connectionId)
         # Serialize and add packets to the queue for this payload
         p = packet.Packet(rid, payload)
         queue.extend(p.packets())
@@ -48,15 +52,15 @@ class DataQueue:
 
     def delete_connection(self, connectionId):
         if connectionId in self.queues:
+            # TODO
             self.logger.info("removing_connection", cid=connectionId)
         else:
             self.logger.warn("no_such_q", cid=connectionId)
 
     def get_next_packet(self, connectionId):
-        if connectionId in self.queues:
-            queue = self.queues[connectionId]
-            if len(queue) > 0:
-                return queue.popleft()
+        queue = self.id2q(connectionId)
+        if len(queue) > 0:
+            return queue.popleft()
 
         # If we get here the queue has drained
         for callback in self.drainEventHandlers:

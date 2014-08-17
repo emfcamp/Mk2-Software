@@ -36,6 +36,17 @@ class Connection(object):
                                           gw_addr="%s:%d" % (self.ip, self.port),
                                           identifier=self.identifier
                                           )
+        # Make sure our data q exists asap, so it's listed in api
+        self.ctx.q.id2q(self.cid)
+
+    def toJSON(self):
+        return {'id': self.cid,
+                'numRadios': self.numRadios,
+                'identifier': self.identifier,
+                'mainChannel': self.mainChannel,
+                'ip': self.ip,
+                'port': self.port,
+                }
 
     def handle_message(self, msg):
         #self.ctx.pub('msg_recvd',

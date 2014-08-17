@@ -1,6 +1,5 @@
 import tornado
 import struct
-import binascii
 
 
 class TransmitWindowAnnouncer:
@@ -21,17 +20,7 @@ class TransmitWindowAnnouncer:
             return
 
         # TODO format of "open transmission window" message here:
-        rid = 45057 #0xB001
+        rid = 45057  # 0xB001
         open_window_msg = struct.pack('>L', self.duration)
 
-        #def msgBuilder(_cid, _conn):
-        #    return {
-        #        "type": "send",
-        #        "radioId": 1,
-        #        "payload": binascii.hexlify(open_window_msg)
-        #    }
-
-        #self.ctx.tcpserver.sendToAll(msgBuilder)
-
-        #for (cid, conn) in self.ctx.tcpserver.connections.items():
         self.ctx.q.add_message(rid, open_window_msg)

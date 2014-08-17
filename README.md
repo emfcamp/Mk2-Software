@@ -29,5 +29,10 @@ Send a message:
 
     curl -XPOST -d "hello" "http://localhost:8888/send?rid=1&connection=2"
 
+Query status of gateways:
+
+    curl "http://localhost:8888/status.json"
+
+
 
 
