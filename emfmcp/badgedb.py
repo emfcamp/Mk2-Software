@@ -25,7 +25,7 @@ class BadgeDB(object):
         if hwid in self.db:
             self.logger('badgedb_existing_hwid', hwid=hwid, badgeid=self.db[hwid].id)
         else:
-            badge = Badge(self._id, hwid)
+            badge = Badge(self._id, hwid=hwid, id=self._id)
             self.db[hwid] = badge
             self._id += 1
             self.logger('badgedb_issue_newid', hwid=hwid, badgeid=self.db[hwid].id)
