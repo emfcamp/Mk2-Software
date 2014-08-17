@@ -4,11 +4,14 @@ import emfmcp
 from pydispatch import dispatcher
 
 
-# Global state object, passed around everywhere
-# also our pub/sub api.
 class Context(object):
-    def __init__(self):
-        pass
+    """Global state and config object, passed around everywhere,
+       also offers a pub/sub API."""
+
+    def __init__(self, configfile):
+        self.config = json.load(open(configfile))
+        self.get_logger = emfmcp.GetLoggerGetter()
+        self.get_logger().info("loaded_config", config=json.dumps(self.config))
 
     def pub(self, signal_name, **rest):
         dispatcher.send(signal=signal_name, **(rest or {}))
@@ -16,14 +19,17 @@ class Context(object):
     def sub(self, signal_name, callback, sender=dispatcher.Any):
         dispatcher.connect(callback, signal=signal_name, sender=sender)
 
-    __slots__ = ('config', 'q', 'tcpserver', 'mcs', 'dcs', 'get_logger', 'badgedb')
+    __slots__ = ('config',
+                 'q',
+                 'tcpserver',
+                 'mcs',
+                 'dcs',
+                 'get_logger',
+                 'badgedb',
+                 )
 
 
-ctx = Context()
-ctx.get_logger = emfmcp.GetLoggerGetter()
-
-ctx.config = json.load(open('etc/config.json'))
-ctx.get_logger().info("loaded_config", config=json.dumps(ctx.config))
+ctx = Context('etc/config.json')
 ctx.q = emfmcp.DataQueue(ctx)
 ctx.tcpserver = emfmcp.TcpServer(ctx)
 ctx.mcs = emfmcp.MainChannelSender(ctx)
