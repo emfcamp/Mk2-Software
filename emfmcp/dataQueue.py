@@ -17,6 +17,7 @@ class DataQueue:
         packets = packet.Packet(rid, payload).packets()
         for (cid, queue) in self.queues:
             queue.extend(packets)
+        return True
 
     def add_message_on_cid(self, connectionId, rid, payload):
         """Send message to a specific connection (ie, to one gateway only)"""
@@ -30,6 +31,20 @@ class DataQueue:
         # Serialize and add packets to the queue for this payload
         p = packet.Packet(rid, payload)
         queue.extend(p.packets())
+        return True
+
+    def add_message_on_badge(self, b, rid, payload):
+        """Send a message to a badge/bid, by looking up the registered gateway"""
+        # b should be the Badge() object, or the badge.id
+        if isinstance(b, int):
+            badge = self.ctx.badgedb.get_badge_by_id(b)
+        else:
+            badge = b
+
+        if badge is None:
+            self.logger.warn('badge_not_found_for_sending', badge=b, rid=rid)
+            return False
+        return self.add_message_on_cid(badge.gwid, rid, payload)
 
     def delete_connection(self, connectionId):
         if connectionId in self.queues:
