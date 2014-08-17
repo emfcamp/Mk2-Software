@@ -4,7 +4,7 @@ import logging
 import serial
 import time
 import re
-import binascii
+
 
 class MockUsbRadios:
     def __init__(self):
@@ -27,8 +27,9 @@ class MockUsbRadios:
     def getInformation(self):
         return []
 
-    def readPacket(self, radio_id, length):
+    def readPacket(self, radio_id):
         return None
+
 
 class UsbRadios:
     def __init__(self):
@@ -57,7 +58,7 @@ class UsbRadios:
         for radio_id, information in enumerate(self.radio_information):
             self._send(radio_id, "+++")
 
-        time.sleep(1.1) # Wait before we send additional command
+        time.sleep(1.1)  # Wait before we send additional command
         for radio_id, information in enumerate(self.radio_information):
             self._flushInput(radio_id)
             self._send(radio_id, "AT\r\n")
@@ -83,11 +84,11 @@ class UsbRadios:
             self.logger.debug("Packet send via radio %d: %s", radio_id, self.packets_send[radio_id])
 
     def sendConfig(self, configurations):
-        time.sleep(1.1) # Wait before we enter AT mode
+        time.sleep(1.1)  # Wait before we enter AT mode
         for radio_id, configuration in enumerate(configurations):
             self.logger.info("Configuring radio %d with %s", radio_id, configuration)
             self._send(radio_id, "+++")
-        time.sleep(1.1) # Wait before we send commands
+        time.sleep(1.1)  # Wait before we send commands
         for radio_id, configuration in enumerate(configurations):
             self._flushInput(radio_id)
             self._send(radio_id, "AT\r\n")
@@ -125,8 +126,8 @@ class UsbRadios:
 
     def readPacket(self, radio_id):
         serial_connection = self.serial_connections[radio_id]
-        data = b"";
-        is_valid_packet = False;
+        data = b""
+        is_valid_packet = False
         while not is_valid_packet:
             data = data + serial_connection.read(1)
             is_valid_packet = (len(data) > 5) and self.packet_regex.match(data[-5:])
