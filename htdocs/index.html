@@ -41,9 +41,19 @@
     <div class="jumbotron">
       <div class="container">
 <script type="x-tmpl-mustache" id="tpl-header">
-    {{ num_badges }} badges connected via {{ num_gateways }} gateways
+    {{ num_badges }} badges, {{ num_gateways }} gateways
 </script>
         <h1 id="fillme-header"></h1>
+<script type="x-tmpl-mustache" id="tpl-note">
+<tr>
+<td>{{ msg }}</td>
+<td>{{ time }}</td>
+</tr>
+</script>
+        <table class="table table-condensed table-striped" id="notes">
+            <tbody id="fillme-notes">
+            </tbody>
+        </table>
       </div>
     </div>
 
@@ -85,7 +95,6 @@
 </script>
 
     <div class="container">
-      <!-- Example row of columns -->
       <div class="row">
         <table class="table table-striped table-bordered">
             <thead>
@@ -106,7 +115,7 @@
       <hr>
 
       <footer>
-        <p>&copy; EMFCamp 2014 2014</p>
+        <p>&copy; EMFCamp 2014</p>
       </footer>
     </div> <!-- /container -->
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>

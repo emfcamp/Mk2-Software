@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import time
 import json
 import emfmcp
 from pydispatch import dispatcher
@@ -12,6 +13,10 @@ class Context(object):
         self.config = json.load(open(configfile))
         self.get_logger = emfmcp.GetLoggerGetter()
         self.get_logger().info("loaded_config", config=json.dumps(self.config))
+
+    def note(self, msg):
+        now = time.strftime("%A, %H:%M:%S")
+        self.pub('notable_event', text=msg, time=now)
 
     def pub(self, signal_name, **rest):
         dispatcher.send(signal=signal_name, **(rest or {}))

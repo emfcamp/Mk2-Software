@@ -93,6 +93,8 @@ class TcpServer(TCPServer):
                          connectionId=connectionId,
                          identifier=identifier,
                          )
+            # friendly log for admin ui:
+            self.ctx.note("New Gateway Connected, cid: %d identifier: %s" % (connectionId, identifier))
 
             # Configure radios
             self.send(connectionId, {
@@ -128,3 +130,4 @@ class TcpServer(TCPServer):
             self.ctx.pub('gateway_disconnected',
                          connectionId=connectionId,
                          )
+            self.ctx.note("Gateway Disconnected, cid: %d" % (connectionId))

@@ -3,7 +3,7 @@ import tornado.ioloop
 import tornado.web
 import binascii
 from tornado.web import url, RequestHandler
-#import tornado.websocket
+import tornado.websocket
 
 
 class Application(tornado.web.Application):
@@ -14,6 +14,17 @@ class Application(tornado.web.Application):
         super(Application, self).__init__(handlers, **settings)
         self.config = ctx.config
         self.q = ctx.q
+        self.websockets = []
+        self.ctx.sub('notable_event', self.broadcast_notable_event)
+
+    def broadcast_notable_event(self, **args):
+        #self.logger.info("sending notable event to ws %r " % (repr(args)), numsockets=len(self.websockets))
+        wsmsg = json.dumps({'type': 'note',
+                            'text': args["text"],
+                            'time': args["time"]
+                            })
+        for ws in self.websockets:
+            ws.write_message(wsmsg)
 
 
 class IndexHandler(RequestHandler):
@@ -51,15 +62,17 @@ class SendHandler(RequestHandler):
         self.write("OK")
 
 
-#class WebSocket(tornado.websocket.WebSocketHandler):
-#    def open(self):
-#        self.application.logger.info('websocket_opened')
-#
-#    def on_message(self, message):
-#        self.write_message(u"You said: " + message)
-#
-#    def on_close(self):
-#        self.application.logger.info('websocket_closed')
+class WebSocket(tornado.websocket.WebSocketHandler):
+    def open(self):
+        self.application.websockets.append(self)
+        self.application.logger.info('websocket_opened')
+
+    def on_message(self, message):
+        self.write_message(u"You said: " + message)
+
+    def on_close(self):
+        self.application.logger.info('websocket_closed')
+        self.application.websockets.remove(self)
 
 
 def listen(ctx, port=8888):
@@ -67,7 +80,7 @@ def listen(ctx, port=8888):
     application = Application(ctx, [
         url(r"/status.json", StatusHandler),
         url(r"/send", SendHandler),
-        #url(r"/ws", WebSocket),
+        url(r"/ws", WebSocket),
         url(r"/(.*)", tornado.web.StaticFileHandler, {'path': static_path}),
     ])
     application.listen(port)
