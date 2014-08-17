@@ -9,7 +9,18 @@ class DataQueue:
         self.drainEventHandlers = []
         self.queues = {}
 
-    def add_message(self, connectionId, rid, payload):
+    def add_message(self, rid, payload):
+        """Send message on all connections (ie, to all gateways+badges)"""
+
+        self.logger.debug("enqueuing_message", cid='*', rid=rid, payload_len=len(payload))
+        # Serialize and add packets to the queue for this payload
+        packets = packet.Packet(rid, payload).packets()
+        for (cid, queue) in self.queues:
+            queue.extend(packets)
+
+    def add_message_on_cid(self, connectionId, rid, payload):
+        """Send message to a specific connection (ie, to one gateway only)"""
+
         self.logger.debug("enqueuing_message", cid=connectionId, rid=rid, payload_len=len(payload))
 
         if connectionId not in self.queues:
