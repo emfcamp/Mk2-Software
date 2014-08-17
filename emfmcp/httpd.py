@@ -26,12 +26,17 @@ class StatusHandler(RequestHandler):
         self.set_header('Content-Type', 'application/json')
         ctx = self.application.ctx
         gateways = {}
+        total_badges = 0
         for (cid, connection) in ctx.tcpserver.connections.items():
             gw = connection.toJSON()
-            gw['badges'] = ctx.badgedb.get_badges_by_cid(cid)
+            badges = ctx.badgedb.get_badges_by_cid(cid)
+            gw['badges'] = badges
+            gw['num_badges'] = len(badges)
+            total_badges += len(badges)
             gateways[cid] = gw
 
         j = {"num_gateways": len(ctx.tcpserver.connections),
+             "num_badges": total_badges,
              "gateways": gateways
              }
         self.write(json.dumps(j))
