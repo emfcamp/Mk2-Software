@@ -5,5 +5,7 @@
     "radioNormalPacketDelay": 10,
     "transmitWindowInterval": 2000,
     "transmitWindowDuration": 1000,
-    "metLocationId": "350493"
+    "metLocationId": "350493",
+    "scheduleUrl": "https://frab.emfcamp.org/en/EMF2014/public/events.json",
+    "mcpBroadcastEndpoint": "http://localhost:8888/send"
 }

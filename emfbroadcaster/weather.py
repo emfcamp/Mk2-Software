@@ -91,12 +91,8 @@ logger.info("Content length: %d", len(packedForecasts))
 
 # Update content
 logger.info("Sending content...")
-params = dict(
-    res='3hourly',
-    key=secret_config['metOfficeApiKey']
-)
-url = "http://localhost:8888/send?rid=40962"
-response = requests.post(url=url, params=params, data=packedForecasts)
+params = dict( rid='40962' )
+response = requests.post(url=config['mcpBroadcastEndpoint'], params=params, data=packedForecasts)
 
 logger.info("Response from MCP: %s", response)
 
