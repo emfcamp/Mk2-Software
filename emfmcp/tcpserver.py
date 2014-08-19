@@ -3,6 +3,7 @@ import sys
 import tornado
 import binascii
 import struct
+import traceback
 from tornado.tcpserver import TCPServer
 from tornado import gen
 from .connection import Connection
@@ -118,7 +119,7 @@ class TcpServer(TCPServer):
             loggerForException = self.logger
             if connectionId in self.connections:
                 loggerForException = self.connections[connectionId].logger
-            loggerForException.error("connection_exception", info=sys.exc_info()[0], e=str(e))
+            loggerForException.error("connection_exception", info=sys.exc_info()[0], e=str(e), stacktrace=traceback.format_exc())
             stream.close()
             self.remove_connection(connectionId)
             raise
