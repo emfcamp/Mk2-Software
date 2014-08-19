@@ -2,24 +2,13 @@
 
 class Badge(object):
     def __init__(self, **args):
-        for (k, v) in args:
-            self.data[k] = v
-
-    def __setattr__(self, k, v):
-        self.data[k] = v
-
-    def __setitem__(self, k, v):
-        self.data[k] = v
-
-    def __getattr__(self, k):
-        return self.data[k]
-
-    def __getitem__(self, k):
-        return self.data[k]
+        self.id=args['id']
+        self.hwid=args['hwid']
+        self.gwid=args['gwid']
 
     def toJSON(self):
         # fine until we add weird types to this object
-        return self.data
+        return self
 
 
 class BadgeDB(object):
@@ -35,7 +24,7 @@ class BadgeDB(object):
 
     def register(self, hwid, cid, gw_id):
         if hwid in self.hw2badge:
-            self.logger('badgedb_existing_hwid', hwid=hwid, badgeid=self.hw2badge[hwid].id)
+            self.logger.info('badgedb_existing_hwid', hwid=hwid, badgeid=self.hw2badge[hwid].id)
         else:
             badge = Badge(id=self._id, hwid=hwid, gwid=gw_id)
             self.hw2badge[hwid] = badge
@@ -45,7 +34,7 @@ class BadgeDB(object):
             else:
                 self.cid2hw[gw_id].push(hwid)
             self._id += 1
-            self.logger('badgedb_issue_newid', hwid=hwid, badgeid=self.hw2badge[hwid].id)
+            self.logger.info('badgedb_issue_newid', hwid=hwid, badgeid=self.hw2badge[hwid].id)
 
         return self.hw2badge[hwid]
 

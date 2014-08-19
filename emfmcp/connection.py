@@ -83,5 +83,5 @@ class Connection(object):
 
         badge = self.ctx.badgedb.register(hwid, self.cid, self.identifier)
 
-        response = hwid + struct.pack('>H', badge['id'])
-        self.ctx.q.add_message(self.cid, RID.RETURN_BADGE_ID, response)
+        response = hwid + struct.pack('>H', badge.id)
+        self.ctx.q.add_message_on_cid(self.cid, RID.RETURN_BADGE_ID, response)
