@@ -18,7 +18,8 @@ logger.info("Updating schedule");
 type_ids = {
     "lecture": 1,
     "installation": 2,
-    "workshop": 3
+    "workshop": 3,
+    "other": 4
 }
 
 resp = requests.get(url=config['scheduleUrl'])
@@ -31,8 +32,8 @@ for event in schedule_json['conference_events']['events']:
 
     if 'start_time' in event:
         location_id = event['room']['id']
-        #startTimestamp = int(round(time.mktime(time.strptime(event['start'], "%Y-%m-%d %H:%M:%S"))));
-        #endTimestamp = int(round(time.mktime(time.strptime(event['end'], "%Y-%m-%d %H:%M:%S"))));
+        start_timestamp = int(round(time.mktime(time.strptime(event['start_time'], "%Y-%m-%dT%H:%M:%SZ"))));
+        end_timestamp = int(round(time.mktime(time.strptime(event['end_time'], "%Y-%m-%dT%H:%M:%SZ"))));
     else:
         location_id = 0
         start_timestamp = 0
