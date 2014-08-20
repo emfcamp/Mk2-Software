@@ -26,11 +26,26 @@ class DataQueue:
             queue.extend(packets)
         return True
 
-    # leaves a marker in the queue that it needs to be blocked for a certain amount of time
-    def add_queue_pauser(self, duration_in_sec):
+    def add_transmit_window_to_all_connections(self, rid, payload, duration_in_sec):
+        """Add transmit window to all connections that don't already have one"""
+
+        self.logger.debug("add_transmit_window_to_all_connections", cid='*', rid=rid, payload_len=len(payload), num_queues=len(self.queues), duration_in_sec=duration_in_sec)
+        packets = packet.Packet(rid, payload).packets()
         for cid, queue in self.queues.iteritems():
-            self.logger.debug("add_queue_pauser_to_cid", cid=cid, duration_in_sec=duration_in_sec)
-            queue.append(duration_in_sec)
+            if not self._contains_float_in_queue(cid):
+                self.logger.debug("add_transmit_window", cid=cid, duration_in_sec=duration_in_sec)
+                queue.extend(packets)
+                queue.append(duration_in_sec)
+
+
+    def _contains_float_in_queue(self, connectionId):
+        """a float in the queue means there's already a transmit window scheduled."""
+        queue = self.id2q(connectionId)
+        for content in queue:
+            if isinstance(content, float):
+                return True
+        return False
+
 
     def add_message_on_cid(self, connectionId, rid, payload):
         """Send message to a specific connection (ie, to one gateway only)"""
