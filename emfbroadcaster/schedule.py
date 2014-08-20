@@ -10,9 +10,9 @@ import tinypacks
 import re
 
 def show_usage_message():
-    print "Usage: ./schedule.py 2014-08-29 40962"
-    print "Usage: ./schedule.py 2014-08-30 40963"
-    print "Usage: ./schedule.py 2014-08-31 40964"
+    print "Usage: ./schedule.py 2014-08-29 40963"
+    print "Usage: ./schedule.py 2014-08-30 40964"
+    print "Usage: ./schedule.py 2014-08-31 40965"
     sys.exit(1)
 
 if len(sys.argv) < 3:
