@@ -3,8 +3,9 @@
     "hostname": "0.0.0.0",
     "radioDiscoveryPacketDelay": 50,
     "radioNormalPacketDelay": 10,
-    "transmitWindowInterval": 2000,
-    "transmitWindowDuration": 1000,
+    "transmitWindowInterval": 5000,
+    "transmitWindowDuration": 5000,
+    "additionalTransmitWindowTime": 200,
     "metLocationId": "350493",
     "scheduleUrl": "https://frab.emfcamp.org/en/EMF2014/public/events.json",
     "mcpBroadcastEndpoint": "http://localhost:8888/send"

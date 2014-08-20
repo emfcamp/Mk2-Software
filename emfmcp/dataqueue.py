@@ -26,6 +26,12 @@ class DataQueue:
             queue.extend(packets)
         return True
 
+    # leaves a marker in the queue that it needs to be blocked for a certain amount of time
+    def add_queue_pauser(self, duration_in_sec):
+        for cid, queue in self.queues.iteritems():
+            self.logger.debug("add_queue_pauser_to_cid", cid=cid, duration_in_sec=duration_in_sec)
+            queue.append(duration_in_sec)
+
     def add_message_on_cid(self, connectionId, rid, payload):
         """Send message to a specific connection (ie, to one gateway only)"""
 

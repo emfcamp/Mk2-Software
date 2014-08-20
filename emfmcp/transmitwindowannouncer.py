@@ -24,3 +24,7 @@ class TransmitWindowAnnouncer:
         open_window_msg = struct.pack('>L', self.duration)
 
         self.ctx.q.add_message(rid, open_window_msg)
+
+        # As an information that the queue needs to be blocked for a certain time now
+        duration_in_seconds = float(self.duration + self.ctx.config["additionalTransmitWindowTime"]) / 1000
+        self.ctx.q.add_queue_pauser(duration_in_seconds)

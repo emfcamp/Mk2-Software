@@ -1,5 +1,6 @@
 import tornado
 import binascii
+import time
 
 
 class MainChannelSender:
@@ -17,14 +18,20 @@ class MainChannelSender:
         q = self.ctx.q
 
         def msgBuilder(cid, _conn):
-            payload = q.get_next_packet(cid)
-            if payload is None:
-                return None
-            else:
-                return {
-                    "type": "send",
-                    "radioId": 1,
-                    "payload": binascii.hexlify(payload)
-                }
+            if _conn.pause_until < time.time():
+                payload = q.get_next_packet(cid)
+                if payload is None:
+                    return None
+                elif isinstance(payload, float):
+                    duration_in_seconds = payload
+                    _conn.pause_until = time.time() + duration_in_seconds
+                    self.logger.info("pause_connection_for_duration", pause_until=_conn.pause_until)
+                else:
+                    print binascii.hexlify(payload)
+                    return {
+                        "type": "send",
+                        "radioId": 1,
+                        "payload": binascii.hexlify(payload)
+                    }
 
         self.ctx.tcpserver.sendToAll(msgBuilder)

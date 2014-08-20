@@ -36,6 +36,10 @@ class Connection(object):
                                           gw_addr="%s:%d" % (self.ip, self.port),
                                           identifier=self.identifier
                                           )
+
+        # A connection that has recently asked badges to transmit should not be transmitting itself
+        self.pause_until = 0
+
         # Make sure our data q exists asap, so it's listed in api
         self.ctx.q.id2q(self.cid)
 
