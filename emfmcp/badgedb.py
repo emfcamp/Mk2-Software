@@ -32,7 +32,7 @@ class BadgeDB(object):
             if gw_id not in self.cid2hw:
                 self.cid2hw[gw_id] = [hwid]
             else:
-                self.cid2hw[gw_id].push(hwid)
+                self.cid2hw[gw_id].append(hwid)
             self._id += 1
             self.logger.info('badgedb_issue_newid', hwid=hwid, badgeid=self.hw2badge[hwid].id)
 

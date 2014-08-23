@@ -64,8 +64,7 @@ class Connection(object):
             self.logger.warn('malformed_message', payload=payload)
             return  # broken packet or similar
 
-        rid = struct.unpack('>H', payload[0:2])[0]
-        sender_id = struct.unpack('>H', payload[2:4])[0]
+        rid, sender_id = struct.unpack('>H H', payload[0:4])
 
         self.logger.info("msg_recvd",
                          msg=binascii.hexlify(payload),
@@ -80,12 +79,13 @@ class Connection(object):
         self.logger.warn("unhandled_msg_received", rid=rid, sender_id=sender_id)
 
     def handle_ident(self, sender_id, body):
-        hwid = body[0:16]
+        hwid_raw = body[0:16]
+        hwid = binascii.hexlify(hwid_raw)
         self.logger.info("badge_id_msg",
                          hwid=hwid,
                          sender_id=sender_id)
 
         badge = self.ctx.badgedb.register(hwid, self.cid, self.identifier)
 
-        response = hwid + struct.pack('>H', badge.id)
+        response = hwid_raw + struct.pack('>H', badge.id)
         self.ctx.q.add_message_on_cid(self.cid, RID.RETURN_BADGE_ID, response)
