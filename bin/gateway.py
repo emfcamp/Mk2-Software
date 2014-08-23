@@ -11,7 +11,7 @@ from uuid import getnode as get_mac
 if len(sys.argv) == 2:
     hostname = sys.argv[1]
 else:
-    hostname = "localhost" # ToDo: replace with real hostname
+    hostname = "schedule.emf.camp" # ToDo: replace with real hostname
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
