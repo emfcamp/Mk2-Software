@@ -31,19 +31,14 @@ worker() {
         cd /tilda
 
         echo "Downloading current version of software from github..."
-        wget https://github.com/emfcamp/Mk2-Software/archive/master.zip -O master.zip -q
-
-        echo "Unpacking code..."
-        rm -rf Mk2-Software-master
-        unzip -q master.zip
-
-        cd Mk2-Software-master
+        cd Mk2-Software
+        git pull --rebase
 
         echo "Run setup..."
         ./setup.py develop
 
         echo "Run gateway..."
-        sudo -u tilda ./bin/gateway.py 192.168.1.71
+        sudo -u tilda ./bin/gateway.py
 
         echo "Process died, start again in 5 sec"
         sleep 5
@@ -51,10 +46,11 @@ worker() {
 }
 
 setup() {
-    sudo apt-get install -y python-setuptools
     useradd tilda
     usermod -a -G dialout tilda
     mkdir /tilda
+    cd /tilda
+    git clone https://github.com/emfcamp/Mk2-Software.git
     mkdir /var/log/tilda
     chown tilda /tilda
     chown tilda /var/log/tilda
@@ -137,3 +133,4 @@ case "$1" in
         exit 2
 esac
 exit 0
+
