@@ -26,16 +26,15 @@ class Connection(object):
         #self.mac = args['mac']
         self.ctx = args['ctx']
         self.cid = args['cid']
-        self.numRadios = args['numberOfRadios']
         self.identifier = args['identifier']
+        self.numRadios = args['numberOfRadios']
         self.stream = args['stream']
         self.mainChannel = args['mainChannel']
         self.ip = args['ip']
         self.mac = args['mac']
         self.port = args['port']
-        self.logger = args['logger'].bind(cid=self.cid,mac=self.mac,
+        self.logger = args['logger'].bind(cid=self.cid, mac=self.mac,
                                           gw_addr="%s:%d" % (self.ip, self.port),
-                                          identifier=self.identifier
                                           )
 
         # A connection that has recently asked badges to transmit should not be transmitting itself
@@ -47,8 +46,8 @@ class Connection(object):
     def toJSON(self):
         return {'id': self.cid,
                 'numRadios': self.numRadios,
-                'identifier': self.identifier,
                 'mainChannel': self.mainChannel,
+                'identifier': self.identifier,
                 'ip': self.ip,
                 'port': self.port,
                 }
@@ -77,7 +76,7 @@ class Connection(object):
         if rid == RID.IDENT:
             return self.handle_ident(sender_id, body)
 
-        self.logger.warn("unhandled_msg_received", rid=rid, sender_id=sender_id)
+        self.logger.warn("unhandled_msg_received", rid=rid, sender_id=sender_id, msg=msg)
 
     def handle_ident(self, sender_id, body):
         hwid_raw = body[0:16]

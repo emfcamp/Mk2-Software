@@ -1,3 +1,4 @@
+import struct
 import json
 import tornado.ioloop
 import tornado.web
@@ -41,7 +42,7 @@ class StatusHandler(RequestHandler):
         for (cid, connection) in ctx.tcpserver.connections.items():
             gw = connection.toJSON()
             badges = ctx.badgedb.get_badges_by_cid(cid)
-            gw['badges'] = badges
+            gw['badges'] = [b.toJSON() for b in badges]
             gw['num_badges'] = len(badges)
             total_badges += len(badges)
             gateways[cid] = gw
@@ -53,13 +54,29 @@ class StatusHandler(RequestHandler):
         self.write(json.dumps(j))
 
 
-class SendHandler(RequestHandler):
+class DMHandler(RequestHandler):
     def post(self):
-        rid = int(self.get_argument('rid', '-1'))
+        bid = int(self.get_argument('badge', '-1'))
+        badge = self.application.ctx.badgedb.get_badge_by_id(bid)
+        if badge is None:
+            self.clear()
+            self.set_status(400)
+            self.finish("FAIL. invalid or not found badge id")
+            return
+        cid = badge.gwid
         msg = self.request.body
-        self.application.logger.info("send_msg", rid=rid, msg=binascii.hexlify(msg))
-        self.application.q.add_message(rid, msg)
+        self.application.ctx.q.add_message_on_cid(cid, bid, msg)
+        self.application.logger.info("send_dm", cid=cid, bid=bid, msg=binascii.hexlify(msg))
         self.write("OK")
+
+
+class FlashMsgHandler(RequestHandler):
+    """ sends msg to all badges """
+    def post(self):
+        rid = 0xb003
+        msg = self.request.body
+        self.application.logger.info("send_flash_msg")
+        self.application.q.add_message(rid, msg)
 
 
 class WebSocket(tornado.websocket.WebSocketHandler):
@@ -79,8 +96,9 @@ def listen(ctx, port=8888):
     static_path = "./htdocs"
     application = Application(ctx, [
         url(r"/status.json", StatusHandler),
-        url(r"/send", SendHandler),
+        url(r"/dm", DMHandler),
         url(r"/ws", WebSocket),
+        url(r"/flashmsg", FlashMsgHandler),
         url(r"/(.*)", tornado.web.StaticFileHandler, {'path': static_path}),
     ])
     application.listen(port)

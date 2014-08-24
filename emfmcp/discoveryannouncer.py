@@ -19,7 +19,7 @@ class DiscoveryAnnouncer:
     def tick(self):
 
         def msgBuilder(connectionId, connection):
-            identifier = connection.identifier.encode('ascii', 'replace')
+            identifier = str(connection.identifier)  # .encode('ascii', 'replace')
             remaining_pause = int((connection.pause_until - time.time()) * 1000) - self.ctx.config["additionalTransmitWindowTime"]
             if remaining_pause < 0:
                 remaining_pause = 0

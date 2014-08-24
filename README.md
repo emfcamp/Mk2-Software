@@ -25,13 +25,26 @@ written as a script, cronned, and deliver messages via the http api.
 
 We'll want helper-handlers, like posting to /send-weather or something.
 
-Send a message:
-
-    curl -XPOST -d "hello" "http://localhost:8888/send?rid=1&connection=2"
-
 Query status of gateways:
 
     curl "http://localhost:8888/status.json"
+
+
+## TODO schema
+
+    CREATE TABLE badge (
+        id SERIAL PRIMARY KEY,
+        hwid text NOT NULL,
+        date timestamp(0) without time zone,
+        gwid integer NOT NULL REFERENCES gateway(id) ON DELETE RESTRICT
+    );
+    CREATE UNIQUE INDEX hwid_uniq ON badge USING btree (hwid);
+
+    CREATE TABLE gateway (
+        id integer PRIMARY KEY,
+        hwid text NOT NULL
+    );
+    CREATE UNIQUE INDEX gateway_hwid ON gateway USING btree (hwid);
 
 
 

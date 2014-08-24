@@ -8,7 +8,10 @@ class Badge(object):
 
     def toJSON(self):
         # fine until we add weird types to this object
-        return self
+        return { "id": self.id,
+                 "hwid": self.hwid,
+                 "gwid": self.gwid
+                 }
 
 
 class BadgeDB(object):
@@ -48,7 +51,8 @@ class BadgeDB(object):
 
     def get_badge_by_id(self, bid):
         """Lookup a Badge() by the 2 byte short id it was assigned"""
-        row = self.cursor.execute("SELECT hwid FROM badge WHERE id = %s", (bid)).fetchone()
+        self.cursor.execute("SELECT hwid FROM badge WHERE id = %s", (bid,))
+        row = self.cursor.fetchone()[0]
         if row is None:
             return None
         else:
@@ -57,10 +61,15 @@ class BadgeDB(object):
 
     def get_badge_by_hwid(self, hwid):
         """Lookup a Badge() by the 16 byte badge-hardware id"""
-        return self.hw2badge[hwid]
+        if hwid in self.hw2badge:
+            return self.hw2badge[hwid]
+        else:
+            return None
 
     def get_badges_by_cid(self, cid):
         """Returns a list of all Badge() on a specific connection id (gateway)"""
-        for (_hwid, badge) in self.hw2badge:
+        badges = []
+        for badge in self.hw2badge.values():
             if badge.gwid == cid:
-                yield badge
+                badges.append(badge)
+        return badges

@@ -59,13 +59,8 @@ class TcpServer(TCPServer):
 
             # Check conditions
             numberOfRadios = gwInfo["numberOfRadios"]
-            identifier = gwInfo["identifier"]
             if numberOfRadios < 2:
                 log.warn("too_few_radios", num=numberOfRadios)
-                stream.close()
-                return
-            if len(identifier) != 3:
-                log.warn("invalid_identifier", id=identifier)
                 stream.close()
                 return
 
@@ -74,24 +69,30 @@ class TcpServer(TCPServer):
             log.info("assigning_channel", channel=mainChannel)
 
             claimed_ip = gwInfo['ip']
-
-            row = self.ctx.cursor.execute("SELECT id FROM gateway WHERE hwid = %s", (gwInfo['mac'],)).fetchOne()
+            cur = self.ctx.cursor()
+            cur.execute("SELECT id FROM gateway WHERE hwid = %s", (hex(gwInfo['mac']),))
+            row = cur.fetchone()
             if row is None:
-                row = self.ctx.cursor.execute("INSERT INTO gateway(hwid) VALUES(%s) RETURNING id", (gwInfo['mac'],)).fetchOne()
+                cur.execute("INSERT INTO gateway(hwid) VALUES(%s) RETURNING id", (hex(gwInfo['mac']),))
+                row = cur.fetchone()
                 connectionId = row[0]
             else:
                 connectionId = row[0]
 
+            # our 3-char string id for a connection:
+            identifier = connectionId
+            #hex(connectionId)[-3:]
+
             connection = Connection(ctx=self.ctx,
                                     cid=connectionId,
-                                    numberOfRadios=numberOfRadios,
                                     identifier=identifier,
+                                    numberOfRadios=numberOfRadios,
                                     stream=stream,
                                     logger=self.logger,
                                     mainChannel=mainChannel,
                                     ip=claimed_ip,
                                     port=port,
-                                    mac=gwInfo['mac'],
+                                    mac=hex(gwInfo['mac']),
                                     )
             # Store connection away
             self.connections[connectionId] = connection
@@ -99,10 +100,9 @@ class TcpServer(TCPServer):
             self.ctx.pub('gateway_connected',
                          sender="%s:%d" % (ip, port),
                          connectionId=connectionId,
-                         identifier=identifier,
                          )
             # friendly log for admin ui:
-            self.ctx.note("New Gateway Connected, cid: %d identifier: %s" % (connectionId, identifier))
+            self.ctx.note("New Gateway Connected, cid: %d " % (connectionId, ))
 
             # Configure radios
             self.send(connectionId, {

@@ -8,5 +8,7 @@
     "additionalTransmitWindowTime": 200,
     "metLocationId": "350493",
     "scheduleUrl": "https://frab.emfcamp.org/en/EMF2014/public/events.json",
+    "flashMsgEndpoint": "http://localhost:8888/flashmsg",
+    "dmMsgEndpoint": "http://localhost:8888/dm",
     "mcpBroadcastEndpoint": "http://localhost:8888/send"
 }
