@@ -5,6 +5,7 @@ import sys
 import emfgateway
 import socket
 import Queue
+import commands
 from uuid import getnode as get_mac
 
 # Parse arguments
@@ -34,6 +35,7 @@ initialInformation = {
     "numberOfRadios": usb_radios.getNumberOfRadios(),
     "radios": usb_radios.getInformation(),
     "mac": mac,
+    "ifconfig": commands.getoutput("/sbin/ifconfig"),
     "identifier":"xxx" # ToDo: Remove this when the mcp doesn't need this anymore
 }
 socket.send(json.dumps(initialInformation) + "\n")
