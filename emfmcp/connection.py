@@ -31,8 +31,9 @@ class Connection(object):
         self.stream = args['stream']
         self.mainChannel = args['mainChannel']
         self.ip = args['ip']
+        self.mac = args['mac']
         self.port = args['port']
-        self.logger = args['logger'].bind(cid=self.cid,
+        self.logger = args['logger'].bind(cid=self.cid,mac=self.mac,
                                           gw_addr="%s:%d" % (self.ip, self.port),
                                           identifier=self.identifier
                                           )

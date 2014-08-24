@@ -16,5 +16,7 @@ setup(name='emfmcp',
           "pyserial >= 2.7",
           "structlog >= 0.4.2",
           "PyDispatcher >= 2.0.3",
+          # apt-get install postgresql-client python-dev libpq-dev
+          "psycopg2 >= 2.4.6",
       ],
       )

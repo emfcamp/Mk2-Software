@@ -15,7 +15,6 @@ class TcpServer(TCPServer):
         super(TcpServer, self).__init__()
         self.ctx = ctx
         self.connections = {}
-        self.nextConnectionId = 0
         self.logger = ctx.get_logger().bind(origin='TcpServer')
 
     def sendToAll(self, msgBuilderFun):
@@ -45,10 +44,9 @@ class TcpServer(TCPServer):
     # gen.coroutine was swallowing errors since it's returning a future. This bubbles errors up.
     @gen.engine
     def handle_stream(self, stream, address):
+        connectionId = None
         try:
-            connectionId = self.nextConnectionId
             self.logger.info("handle_stream", connId=connectionId)
-            self.nextConnectionId += 1
             ip = address[0]
             port = address[1]
             log = self.ctx.get_logger().bind(origin='tcpserver', cid=connectionId, ip=ip, port=port)
@@ -75,6 +73,15 @@ class TcpServer(TCPServer):
             mainChannel = self.get_unused_channel()
             log.info("assigning_channel", channel=mainChannel)
 
+            claimed_ip = gwInfo['ip']
+
+            row = self.ctx.cursor.execute("SELECT id FROM gateway WHERE hwid = %s", (gwInfo['mac'],)).fetchOne()
+            if row is None:
+                row = self.ctx.cursor.execute("INSERT INTO gateway(hwid) VALUES(%s) RETURNING id", (gwInfo['mac'],)).fetchOne()
+                connectionId = row[0]
+            else:
+                connectionId = row[0]
+
             connection = Connection(ctx=self.ctx,
                                     cid=connectionId,
                                     numberOfRadios=numberOfRadios,
@@ -82,9 +89,9 @@ class TcpServer(TCPServer):
                                     stream=stream,
                                     logger=self.logger,
                                     mainChannel=mainChannel,
-                                    ip=ip,
+                                    ip=claimed_ip,
                                     port=port,
-                                    #mac=gwInfo['mac'],
+                                    mac=gwInfo['mac'],
                                     )
             # Store connection away
             self.connections[connectionId] = connection

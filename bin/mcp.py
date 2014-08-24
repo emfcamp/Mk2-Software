@@ -2,6 +2,7 @@
 import time
 import json
 import emfmcp
+import psycopg2
 from pydispatch import dispatcher
 
 
@@ -13,6 +14,12 @@ class Context(object):
         self.config = json.load(open(configfile))
         self.get_logger = emfmcp.GetLoggerGetter()
         self.get_logger().info("loaded_config", config=json.dumps(self.config))
+        dbstr = "host='localhost' dbname='schedule' user='tilda' password='tilda'"
+        self.conn = psycopg2.connect(dbstr)
+        self.conn.set_session(autocommit=True)
+
+    def cursor(self):
+        return self.conn.cursor()
 
     def note(self, msg):
         now = time.strftime("%A, %H:%M:%S")
@@ -31,6 +38,7 @@ class Context(object):
                  'dcs',
                  'get_logger',
                  'badgedb',
+                 'conn',
                  )
 
 

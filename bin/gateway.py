@@ -12,7 +12,7 @@ from uuid import getnode as get_mac
 if len(sys.argv) == 2:
     hostname = sys.argv[1]
 else:
-    hostname = "schedule.emf.camp" # ToDo: replace with real hostname
+    hostname = "schedule.emf.camp"  # ToDo: replace with real hostname
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -25,9 +25,10 @@ usb_radios.setup()
 
 # Get MAC ID
 mac = get_mac()
-logger.info("MAC: %s", mac);
+logger.info("MAC: %s", mac)
 
 # Connect to mcp
+cmd_ip = "ifconfig | grep 'inet addr' | head -n 1 | sed -e 's/[^:]*://' -e 's/ .*//'"
 socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket.connect((hostname, 36000))
 initialInformation = {
@@ -35,8 +36,7 @@ initialInformation = {
     "numberOfRadios": usb_radios.getNumberOfRadios(),
     "radios": usb_radios.getInformation(),
     "mac": mac,
-    "ifconfig": commands.getoutput("/sbin/ifconfig"),
-    "identifier":"xxx" # ToDo: Remove this when the mcp doesn't need this anymore
+    "ip": commands.getoutput(cmd_ip)
 }
 socket.send(json.dumps(initialInformation) + "\n")
 logger.info("Established connection to mcp")
