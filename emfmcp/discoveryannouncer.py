@@ -20,10 +20,15 @@ class DiscoveryAnnouncer:
 
         def msgBuilder(connectionId, connection):
             identifier = connection.identifier.encode('ascii', 'replace')
-            payload = struct.pack('> B I 3s',
+            remaining_pause = int((connection.pause_until - time.time()) * 1000) - self.ctx.config["additionalTransmitWindowTime"]
+            if remaining_pause < 0:
+                remaining_pause = 0
+
+            payload = struct.pack('> B I 3s I',
                                   connection.mainChannel,
                                   time.time(),
-                                  identifier
+                                  identifier,
+                                  remaining_pause
                                   )
             return {
                 "type": "send",
