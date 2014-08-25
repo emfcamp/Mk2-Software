@@ -92,12 +92,22 @@ class WebSocket(tornado.websocket.WebSocketHandler):
         self.application.websockets.remove(self)
 
 
+class SendHandler(RequestHandler):
+    def post(self):
+        rid = int(self.get_argument('rid', '-1'))
+        msg = self.request.body
+        self.application.logger.info("send_msg", rid=rid, msg=binascii.hexlify(msg))
+        self.application.q.add_message(rid, msg)
+        self.write("OK")
+
+
 def listen(ctx, port=8888):
     static_path = "./htdocs"
     application = Application(ctx, [
         url(r"/status.json", StatusHandler),
         url(r"/dm", DMHandler),
         url(r"/ws", WebSocket),
+        url(r"/send", SendHandler),
         url(r"/flashmsg", FlashMsgHandler),
         url(r"/(.*)", tornado.web.StaticFileHandler, {'path': static_path}),
     ])
