@@ -3,6 +3,7 @@ import logging
 import json
 import requests
 import tinypacks
+import sys
 
 config = json.load(open('../etc/config.json'))
 
@@ -10,7 +11,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(leve
 logger = logging.getLogger('flashmsg')
 
 ## TODO: make this settable via CLI options:
-msg = "Flash! Ah-ahhh!"
+msg = sys.argv[1]
 rgb1 = (0, 0, 255)
 rgb2 = (0, 255, 0)
 sound = 0
