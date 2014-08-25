@@ -32,6 +32,12 @@ Query status of gateways:
 
 ## TODO schema
 
+    CREATE TABLE gateway (
+        id SERIAL PRIMARY KEY,
+        hwid text NOT NULL
+    );
+    CREATE UNIQUE INDEX gateway_hwid ON gateway USING btree (hwid);
+
     CREATE TABLE badge (
         id SERIAL PRIMARY KEY,
         hwid text NOT NULL,
@@ -40,11 +46,7 @@ Query status of gateways:
     );
     CREATE UNIQUE INDEX hwid_uniq ON badge USING btree (hwid);
 
-    CREATE TABLE gateway (
-        id integer PRIMARY KEY,
-        hwid text NOT NULL
-    );
-    CREATE UNIQUE INDEX gateway_hwid ON gateway USING btree (hwid);
+
 
 
 
