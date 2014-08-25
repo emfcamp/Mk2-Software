@@ -13,6 +13,7 @@ logger = logging.getLogger('dm')
 rgb1 = (0, 0, 255)
 rgb2 = (0, 255, 0)
 sound = 1
+typebyte = 0
 
 badge = int(sys.argv[1])
 msg = sys.argv[2]
@@ -26,6 +27,7 @@ packed += tinypacks.pack(rgb2[0])
 packed += tinypacks.pack(rgb2[1])
 packed += tinypacks.pack(rgb2[2])
 packed += tinypacks.pack(sound)
+packed += tinypacks.pack(typebyte)
 packed += tinypacks.pack(msg)
 
 logger.info("Sending content...")

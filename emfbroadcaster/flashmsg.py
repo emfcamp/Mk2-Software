@@ -15,6 +15,7 @@ msg = sys.argv[1]
 rgb1 = (0, 0, 255)
 rgb2 = (0, 255, 0)
 sound = 0
+typebyte = 1
 ##
 
 packed = b""
@@ -25,6 +26,7 @@ packed += tinypacks.pack(rgb2[0])
 packed += tinypacks.pack(rgb2[1])
 packed += tinypacks.pack(rgb2[2])
 packed += tinypacks.pack(sound)
+packed += tinypacks.pack(typebyte)
 packed += tinypacks.pack(msg)
 
 logger.info("Sending content...")
