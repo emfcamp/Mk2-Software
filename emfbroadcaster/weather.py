@@ -77,7 +77,11 @@ for timeElement in times:
     precipitationProbability = int(forecast['Pp'])
     logger.info("timestamp: %d - %s UTC", timestamp, datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S'));
     logger.info("temperature: %d", temperature);
+    logger.info("feelsLikeTemperature: %d", feelsLikeTemperature);
     logger.info("weatherType: %d", weatherType);
+    logger.info("windSpeed: %d", windSpeed);
+    logger.info("screenRelativeHumidity: %d", screenRelativeHumidity);
+    logger.info("precipitationProbability: %d", precipitationProbability);
     packedForecasts += tinypacks.pack(timestamp);
     packedForecasts += tinypacks.pack(weatherType);
     packedForecasts += tinypacks.pack(temperature);

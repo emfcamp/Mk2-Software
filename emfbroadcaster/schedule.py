@@ -14,23 +14,32 @@ cursor = conn.cursor()
 
 
 def show_usage_message():
-    print "Usage: ./schedule.py <fri|sat|sun>"
+    print "Usage: ./schedule.py <fri|sat|sun> <stage_a|stage_b"
     sys.exit(1)
 
 
 dayname = sys.argv[1]
 
 if dayname == "fri":
-    rid = 40963
+    rid = 40976
     day = 29
 elif dayname == "sat":
-    rid = 40964
+    rid = 40992
     day = 30
 elif dayname == "sun":
-    rid = 40965
+    rid = 41008
     day = 31
 else:
     show_usage_message()
+
+location_map = {
+    4: 0, # Stage A
+    5: 1, # Stage B
+    6: 2, # Stage C
+    7: 3, # Workshop
+
+    -1: 11 # Other
+}
 
 config = json.load(open('../etc/config.json'))
 
@@ -39,7 +48,7 @@ logger = logging.getLogger('schedule')
 
 
 def get_schedule_for_day_and_location(day, locid):
-    sql = "select id, title, type_id, abstract, speaker_names, extract('epoch' from start_time), extract('epoch' from end_time), location_id, location_name, date_part('day', start_time) as day from event where date_part('day', start_time) = %s and location_id = %s"
+    sql = "select id, title, type_id, abstract, speaker_names, extract('epoch' from start_time), extract('epoch' from end_time), location_id, location_name, date_part('day', start_time) as day from event where date_part('day', start_time) = %s and location_id = %s order by start_time asc"
     cursor.execute(sql, (day, locid))
     rows = cursor.fetchall()
     ret = []
@@ -75,10 +84,10 @@ def pack_location_day_data(loc, s):
         start_timestamp = event['start_time']
         end_timestamp = event['end_time']
         type_id = type_name_to_id(event['type'])
-        speaker = ""
-        if 'speaker' in event:
-            speaker = event['speaker']['full_public_name']
-        packed += tinypacks.pack(event['location_id'])
+        speaker = ''
+        if 'speaker_names' in event:
+            speaker = event['speaker_names']
+        packed += tinypacks.pack(loc)
         packed += tinypacks.pack(type_id)
         packed += tinypacks.pack(start_timestamp)
         packed += tinypacks.pack(end_timestamp)
@@ -87,18 +96,20 @@ def pack_location_day_data(loc, s):
     return packed
 
 
-cursor.execute("select distinct location_id from event where location_id is not null order by location_id")
+cursor.execute("select distinct COALESCE(location_id, -1) from event;")
 locids = cursor.fetchall()
 
 for locidtup in locids:
-    loc = locidtup[0]
-    s = get_schedule_for_day_and_location(day, loc)
-    print s
-    p = pack_location_day_data(loc, s)
-    params = dict(rid=rid)
-    logger.info("Uploading location %d...", loc)
-    response = requests.post(url=config['mcpBroadcastEndpoint'], params=params, data=p)
-    if (response.status_code == 200):
-        logger.info("OK")
-    else:
-        logger.warn("ERROR!!!!! %s", response)
+    loc_db = locidtup[0];
+    loc = location_map[loc_db]
+    loc_rid = rid + loc
+    s = get_schedule_for_day_and_location(day, loc_db)
+    if len(s) > 0:
+        p = pack_location_day_data(loc, s)
+        params = dict(rid=loc_rid)
+        logger.info("Uploading location %d with len %d for rid %d", loc, len(p), loc_rid)
+        response = requests.post(url=config['mcpBroadcastEndpoint'], params=params, data=p)
+        if (response.status_code == 200):
+            logger.info("OK")
+        else:
+            logger.warn("ERROR!!!!! %s", response)
