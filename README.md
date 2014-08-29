@@ -34,6 +34,7 @@ Query status of gateways:
 
     CREATE TABLE gateway (
         id SERIAL PRIMARY KEY,
+        identifier text NOT NULL UNIQUE,
         hwid text NOT NULL
     );
     CREATE UNIQUE INDEX gateway_hwid ON gateway USING btree (hwid);

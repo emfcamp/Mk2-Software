@@ -7,6 +7,8 @@ import traceback
 from tornado.tcpserver import TCPServer
 from tornado import gen
 from .connection import Connection
+import random
+import string
 
 
 class TcpServer(TCPServer):
@@ -70,18 +72,17 @@ class TcpServer(TCPServer):
 
             claimed_ip = gwInfo['ip']
             cur = self.ctx.cursor()
-            cur.execute("SELECT id FROM gateway WHERE hwid = %s", (hex(gwInfo['mac']),))
+            cur.execute("SELECT id, identifier FROM gateway WHERE hwid = %s", (hex(gwInfo['mac']),))
             row = cur.fetchone()
             if row is None:
-                cur.execute("INSERT INTO gateway(hwid) VALUES(%s) RETURNING id", (hex(gwInfo['mac']),))
+                made_up_identifier = ''.join(random.choice(string.ascii_uppercase) for _ in range(3));
+                cur.execute("INSERT INTO gateway(hwid, identifier) VALUES(%s, %s) RETURNING id", (hex(gwInfo['mac']), made_up_identifier))
                 row = cur.fetchone()
                 connectionId = row[0]
+                identifier = made_up_identifier
             else:
                 connectionId = row[0]
-
-            # our 3-char string id for a connection:
-            identifier = connectionId
-            #hex(connectionId)[-3:]
+                identifier = row[1]
 
             connection = Connection(ctx=self.ctx,
                                     cid=connectionId,

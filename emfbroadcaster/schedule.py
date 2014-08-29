@@ -33,10 +33,16 @@ else:
     show_usage_message()
 
 location_map = {
-    4: 0, # Stage A
-    5: 1, # Stage B
-    6: 2, # Stage C
-    7: 3, # Workshop
+    4 : 0, # Stage A
+    5 : 1, # Stage B
+    6 : 2, # Stage C
+    7 : 3, # Workshop
+    15: 4, # Kids
+    8 : 11,# Blacksmithing
+    19: 11,# Info tent
+    18: 5, # Lasercutting village
+    16: 6, # Lounge
+    17: 5, # Slackers on holiday
 
     -1: 11 # Other
 }
@@ -98,18 +104,24 @@ def pack_location_day_data(loc, s):
 
 cursor.execute("select distinct COALESCE(location_id, -1) from event;")
 locids = cursor.fetchall()
+all_locations = {}
 
 for locidtup in locids:
     loc_db = locidtup[0];
     loc = location_map[loc_db]
     loc_rid = rid + loc
+    if loc_rid not in all_locations:
+        all_locations[loc_rid] = [];
     s = get_schedule_for_day_and_location(day, loc_db)
     if len(s) > 0:
-        p = pack_location_day_data(loc, s)
-        params = dict(rid=loc_rid)
-        logger.info("Uploading location %d with len %d for rid %d", loc, len(p), loc_rid)
-        response = requests.post(url=config['mcpBroadcastEndpoint'], params=params, data=p)
-        if (response.status_code == 200):
-            logger.info("OK")
-        else:
-            logger.warn("ERROR!!!!! %s", response)
+        all_locations[loc_rid].extend(s)
+
+for loc_rid, s in all_locations.iteritems():
+    p = pack_location_day_data(0, s)
+    params = dict(rid=loc_rid)
+    logger.info("Uploading location %d with len %d for rid %d", loc, len(p), loc_rid)
+    response = requests.post(url=config['mcpBroadcastEndpoint'], params=params, data=p)
+    if (response.status_code == 200):
+        logger.info("OK")
+    else:
+        logger.warn("ERROR!!!!! %s", response)

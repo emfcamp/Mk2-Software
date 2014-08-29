@@ -87,5 +87,9 @@ class Connection(object):
 
         badge = self.ctx.badgedb.register(hwid, self.cid, self.identifier)
 
-        response = hwid_raw + struct.pack('>H', badge.id)
+        names = badge.getUserNames(self.ctx.cursor());
+        name1 = names[0].encode('ascii', 'replace').ljust(10, '\0');
+        name2 = names[1].encode('ascii', 'replace').ljust(10, '\0');
+
+        response = hwid_raw + struct.pack('>H', badge.id) + name1 + name2
         self.ctx.q.add_message_on_cid(self.cid, RID.RETURN_BADGE_ID, response)
