@@ -50,6 +50,8 @@ class DataQueue:
     def add_message_on_cid(self, connectionId, rid, payload):
         """Send message to a specific connection (ie, to one gateway only)"""
 
+        return self.add_message(rid, payload)
+
         self.logger.debug("enqueuing_message", cid=connectionId, rid=rid, payload_len=len(payload))
 
         queue = self.id2q(connectionId)
@@ -60,6 +62,9 @@ class DataQueue:
 
     def add_message_on_badge(self, b, rid, payload):
         """Send a message to a badge/bid, by looking up the registered gateway"""
+
+        return self.add_message(rid, payload)
+
         # b should be the Badge() object, or the badge.id
         if isinstance(b, int):
             badge = self.ctx.badgedb.get_badge_by_id(b)
